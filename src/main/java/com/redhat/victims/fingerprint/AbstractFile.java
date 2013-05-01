@@ -2,7 +2,7 @@ package com.redhat.victims.fingerprint;
 
 import java.util.HashMap;
 
-public abstract class AbstractFile {
+public abstract class AbstractFile implements Interface {
 	protected HashMap<String, String> fingerprints = null;
 	protected String fileName = null;
 

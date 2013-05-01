@@ -1,11 +1,16 @@
 package com.redhat.victims.fingerprint;
 
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.lang.reflect.Constructor;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
 import org.apache.commons.codec.binary.Hex;
+import org.apache.commons.io.IOUtils;
 
 public class Processor {
 	private static ArrayList<String> ALGORITHMS = new ArrayList<String>();
@@ -35,6 +40,49 @@ public class Processor {
 
 	public static boolean isKnownType(String fileType) {
 		return TYPE_MAP.containsKey(fileType);
+	}
+
+	public static HashMap<String, Object> process(byte[] bytes, String fileName) {
+		String fileType = Processor.getFileType(fileName);
+		if (Processor.isKnownType(fileType)) {
+			// Only handle types we know about eg: .class .jar
+			Class<?> cls = Processor.getProcessor(fileType);
+			try {
+				if (AbstractFile.class.isAssignableFrom(cls)) {
+					// TOOD: Maybe find a better way of doing this.
+					Constructor<?> ctor = cls.getConstructor(byte[].class,
+							String.class);
+					Object object = ctor.newInstance(new Object[] { bytes,
+							fileName });
+					HashMap<String, Object> record = ((Interface) object)
+							.getRecord();
+					return record;
+				}
+			} catch (Exception e) {
+				// TODO: Handle bad file
+			}
+		}
+		return null;
+	}
+
+	public static HashMap<String, Object> process(InputStream is,
+			String fileName) throws IOException {
+		return process(IOUtils.toByteArray(is), fileName);
+	}
+
+	public static HashMap<String, Object> process(String fileName)
+			throws IOException {
+		FileInputStream fis = new FileInputStream(fileName);
+		return process(fis, fileName);
+	}
+
+	protected static String getFileType(String name) {
+		// TODO: Handle things like tar.gz ??
+		String[] tokens = name.split("\\.(?=[^\\.]+$)");
+		if (tokens.length > 1) {
+			return "." + tokens[tokens.length - 1].toLowerCase();
+		}
+		return "";
 	}
 
 	public static HashMap<String, String> fingerprint(byte[] bytes) {
@@ -69,4 +117,17 @@ public class Processor {
 		}
 	}
 
+	public static void main(String argv[]) {
+		// Main method for testing
+		// DEBUG CODE
+		for (int i = 0; i < argv.length; i++) {
+			try {
+				HashMap<String, Object> record = process(argv[i]);
+				System.out.println(record);
+			} catch (IOException e) {
+				// Silently ignore invalids
+			}
+
+		}
+	}
 }
