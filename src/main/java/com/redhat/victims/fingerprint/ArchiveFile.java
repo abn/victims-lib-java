@@ -1,6 +1,5 @@
 package com.redhat.victims.fingerprint;
 
-import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
@@ -13,17 +12,20 @@ import java.util.HashMap;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
+import org.apache.commons.io.IOUtils;
+
 public class ArchiveFile extends AbstractFile {
 	public static boolean RECURSIVE = true;
 	private static final int BUFFER = 2048;
 
 	protected ArrayList<Object> contents;
+	protected HashMap<String, String> contentFingerprint;
 	protected ZipInputStream zis;
 
-	public ArchiveFile(InputStream is, String fileName) throws IOException {
+	public ArchiveFile(byte[] bytes, String fileName) throws IOException {
 		this.contents = new ArrayList<Object>();
 		this.fileName = fileName;
-		this.zis = new ZipInputStream(new BufferedInputStream(is));
+		this.zis = new ZipInputStream(new ByteArrayInputStream(bytes));
 		ByteArrayOutputStream bos = new ByteArrayOutputStream();
 		Content file;
 		while ((file = getNextFile()) != null) {
@@ -50,7 +52,10 @@ public class ArchiveFile extends AbstractFile {
 				}
 			}
 		}
-		this.fingerprints = Processor.fingerprint(bos.toByteArray());
+
+		// TODO: decide if we want to keep the content-only hash
+		this.contentFingerprint = Processor.fingerprint(bos.toByteArray());
+		this.fingerprints = Processor.fingerprint(bytes);
 		bos.close();
 		zis.close();
 	}
@@ -59,13 +64,14 @@ public class ArchiveFile extends AbstractFile {
 		this(new FileInputStream(fileName), fileName);
 	}
 
-	public ArchiveFile(byte[] bytes, String fileName) throws IOException {
-		this(new ByteArrayInputStream(bytes), fileName);
+	public ArchiveFile(InputStream is, String fileName) throws IOException {
+		this(IOUtils.toByteArray(is), fileName);
 	}
 
 	public HashMap<String, Object> getRecord() {
 		HashMap<String, Object> result = super.getRecord();
 		result.put(Processor.CONTENT_KEY, contents);
+		result.put(Processor.CONTENT_FINGERPRINT_KEY, contentFingerprint);
 		return result;
 	}
 

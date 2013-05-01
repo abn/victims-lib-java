@@ -12,6 +12,7 @@ public class Processor {
 	private static DefaultHashMap<String, Class<?>> TYPE_MAP = 
 			new DefaultHashMap<String, Class<?>>(File.class);
 	public static String CONTENT_KEY = "content";
+	public static String CONTENT_FINGERPRINT_KEY = "content-fingerprint";
 	public static String FINGERPRINT_KEY = "fingerprint";
 	public static String METADATA_KEY = "metadata";
 	public static String FILENAME_KEY = "filename";
