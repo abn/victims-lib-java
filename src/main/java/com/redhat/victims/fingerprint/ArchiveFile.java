@@ -28,6 +28,7 @@ public class ArchiveFile extends AbstractFile {
 
 	protected ArrayList<Object> contents;
 	protected HashMap<String, String> contentFingerprint;
+	protected HashMap<String, String> metadata;
 	protected ZipInputStream zis;
 
 	/**
@@ -40,12 +41,29 @@ public class ArchiveFile extends AbstractFile {
 	 */
 	public ArchiveFile(byte[] bytes, String fileName) throws IOException {
 		this.contents = new ArrayList<Object>();
+		this.metadata = new HashMap<String, String>();
 		this.fileName = fileName;
 		this.zis = new ZipInputStream(new ByteArrayInputStream(bytes));
 		ByteArrayOutputStream bos = new ByteArrayOutputStream();
 		Content file;
 		while ((file = getNextFile()) != null) {
 			bos.write(file.bytes);
+
+			// Handle metadata/special cases
+			if (file.name.toLowerCase().endsWith("manifest.mf")) {
+				// handle manifest.mf files
+				// FIXME: java.util.jar.Manifest does not seem to like this
+				// sometimes.
+				InputStream is = new ByteArrayInputStream(file.bytes);
+				metadata.putAll(Metadata.fromManifest(is));
+			} else if (file.name.toLowerCase().endsWith("pom.xml")) {
+				// handle pom files
+				InputStream is = new ByteArrayInputStream(file.bytes);
+				metadata.putAll(Metadata.fromPom(is));
+			}
+
+			// This is separate as we may or may not want to fingerprint
+			// all files.
 			if (RECURSIVE) {
 				HashMap<String, Object> record = Processor.process(file.bytes,
 						file.name);
@@ -88,6 +106,9 @@ public class ArchiveFile extends AbstractFile {
 		HashMap<String, Object> result = super.getRecord();
 		result.put(Processor.CONTENT_KEY, contents);
 		result.put(Processor.CONTENT_FINGERPRINT_KEY, contentFingerprint);
+		if (metadata.size() > 0){
+			result.put(Processor.METADATA_KEY, metadata);
+		}
 		return result;
 	}
 
