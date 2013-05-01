@@ -18,8 +18,8 @@ public class Metadata {
 	/**
 	 * Attempts to parse a pom.xml file.
 	 * 
-	 * @param bytes
-	 *            A byte array containing the extracted POM file.
+	 * @param is
+	 *            An input stream containing the extracted POM file.
 	 */
 	public static HashMap<String, String> fromPom(InputStream is) {
 		HashMap<String, String> metadata = new HashMap<String, String>();
