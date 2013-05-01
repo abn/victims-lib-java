@@ -12,10 +12,19 @@ import java.util.HashMap;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.io.IOUtils;
 
+/**
+ * The Processor acts as an entry point for handling fingerprinting. This class
+ * also hadles dynamic processing of files/byte arrays/input streams.
+ * 
+ * @author abn
+ * 
+ */
 public class Processor {
 	private static ArrayList<String> ALGORITHMS = new ArrayList<String>();
 	private static DefaultHashMap<String, Class<?>> TYPE_MAP = 
 			new DefaultHashMap<String, Class<?>>(File.class);
+
+	// Keys used in records
 	public static String CONTENT_KEY = "content";
 	public static String CONTENT_FINGERPRINT_KEY = "content-fingerprint";
 	public static String FINGERPRINT_KEY = "fingerprint";
@@ -34,14 +43,40 @@ public class Processor {
 		TYPE_MAP.put(".jar", ArchiveFile.class);
 	}
 
+	/**
+	 * 
+	 * @param filetype
+	 *            The type of a file to check for. eg: ".class" ".jar"
+	 * @return Class to handle the file of the given type.
+	 */
 	public static Class<?> getProcessor(String filetype) {
 		return TYPE_MAP.get(filetype.toLowerCase());
 	}
 
+	/**
+	 * 
+	 * @param fileType
+	 *            The type of a file to check for. eg: ".class" ".jar"
+	 * @return true if the given file type is configured explicitely, else
+	 *         false.
+	 */
 	public static boolean isKnownType(String fileType) {
 		return TYPE_MAP.containsKey(fileType);
 	}
 
+	/**
+	 * Process the given file (as bytes) and return the information record.
+	 * 
+	 * @param bytes
+	 *            The file to process as a byte array.
+	 * @param fileName
+	 *            The name of the file being processed.
+	 * @return Information record. This will be of the format indicated below.
+	 *         Only those keys with values available will be present. record = {
+	 *         FILENAME_KEY : string CONTENT_KEY : Array List of records (if
+	 *         archive) CONTENT_FINGERPRINT_KEY : { algorithm:hash }
+	 *         FINGERPRINT_KEY : { algorithm:hash } METADATA_KEY : {key:val} }
+	 */
 	public static HashMap<String, Object> process(byte[] bytes, String fileName) {
 		String fileType = Processor.getFileType(fileName);
 		if (Processor.isKnownType(fileType)) {
@@ -65,17 +100,40 @@ public class Processor {
 		return null;
 	}
 
+	/**
+	 * @param is
+	 *            The file as an input stream.
+	 * @param fileName
+	 *            The name of the file provided by the stream.
+	 * @return Information record.
+	 * @throws IOException
+	 */
 	public static HashMap<String, Object> process(InputStream is,
 			String fileName) throws IOException {
 		return process(IOUtils.toByteArray(is), fileName);
 	}
 
+	/**
+	 * 
+	 * @param fileName
+	 *            The name of the file provided by the stream.
+	 * @return Information record.
+	 * @throws IOException
+	 */
 	public static HashMap<String, Object> process(String fileName)
 			throws IOException {
 		FileInputStream fis = new FileInputStream(fileName);
 		return process(fis, fileName);
 	}
 
+	/**
+	 * Simple regex based method to get the extension of a given file name.
+	 * NOTE: This only fetches the last extension so foo.bar.ext will return
+	 * '.ext' and foobar will return ''.
+	 * 
+	 * @param name
+	 * @return Extension in given file name.
+	 */
 	protected static String getFileType(String name) {
 		// TODO: Handle things like tar.gz ??
 		String[] tokens = name.split("\\.(?=[^\\.]+$)");
@@ -85,6 +143,14 @@ public class Processor {
 		return "";
 	}
 
+	/**
+	 * Generate a hashmap of fingerprints for a give byte array using all
+	 * configured algorithms. Default: SHA1, SHA-512, MD5.
+	 * 
+	 * @param bytes
+	 *            A byte array whose content is to be fingerprinted.
+	 * @return Hashmap of the form {algorithm:hash}
+	 */
 	public static HashMap<String, String> fingerprint(byte[] bytes) {
 		HashMap<String, String> fingerprints = new HashMap<String, String>();
 		for (String algorithm : ALGORITHMS) {
@@ -100,6 +166,18 @@ public class Processor {
 		return fingerprints;
 	}
 
+	/**
+	 * Inner class that handles default return for non-configured file
+	 * extensions. This accepts a default value of type V to return if key is
+	 * not in the HashMap when using get.
+	 * 
+	 * @author abn
+	 * 
+	 * @param <K>
+	 *            Key for type K
+	 * @param <V>
+	 *            Value of type V
+	 */
 	protected static class DefaultHashMap<K, V> extends HashMap<K, V> {
 		private static final long serialVersionUID = 1L;
 		protected V defaultValue;

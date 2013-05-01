@@ -13,7 +13,16 @@ import java.util.zip.ZipInputStream;
 
 import org.apache.commons.io.IOUtils;
 
+/**
+ * Implements handing of Archive files for fingerprinting.
+ * 
+ * @author abn
+ * 
+ */
 public class ArchiveFile extends AbstractFile {
+	/**
+	 * Indicates if archive contents get processed. Default is true.
+	 */
 	public static boolean RECURSIVE = true;
 	private static final int BUFFER = 2048;
 
@@ -21,6 +30,14 @@ public class ArchiveFile extends AbstractFile {
 	protected HashMap<String, String> contentFingerprint;
 	protected ZipInputStream zis;
 
+	/**
+	 * 
+	 * @param bytes
+	 *            A byte array containing the bytes of the file
+	 * @param fileName
+	 *            Name of the file being provided as bytes
+	 * @throws IOException
+	 */
 	public ArchiveFile(byte[] bytes, String fileName) throws IOException {
 		this.contents = new ArrayList<Object>();
 		this.fileName = fileName;
@@ -45,10 +62,24 @@ public class ArchiveFile extends AbstractFile {
 		zis.close();
 	}
 
+	/**
+	 * 
+	 * @param fileName
+	 *            Name of the file being process, expected as path on disk.
+	 * @throws IOException
+	 */
 	public ArchiveFile(String fileName) throws IOException {
 		this(new FileInputStream(fileName), fileName);
 	}
 
+	/**
+	 * 
+	 * @param is
+	 *            The file as an input stream.
+	 * @param fileName
+	 *            The name of the file provided by the stream.
+	 * @throws IOException
+	 */
 	public ArchiveFile(InputStream is, String fileName) throws IOException {
 		this(IOUtils.toByteArray(is), fileName);
 	}
@@ -60,6 +91,11 @@ public class ArchiveFile extends AbstractFile {
 		return result;
 	}
 
+	/**
+	 * 
+	 * @return
+	 * @throws IOException
+	 */
 	protected Content getNextFile() throws IOException {
 		ZipEntry entry;
 		while ((entry = this.zis.getNextEntry()) != null) {
@@ -76,6 +112,14 @@ public class ArchiveFile extends AbstractFile {
 
 	}
 
+	/**
+	 * Content -- Inner class for use by {@link ArchiveFile}. This is used to
+	 * group name of file extracted in memory and the corresponding bytes that
+	 * were read.
+	 * 
+	 * @author abn
+	 * 
+	 */
 	protected final class Content {
 		public String name;
 		public byte[] bytes;

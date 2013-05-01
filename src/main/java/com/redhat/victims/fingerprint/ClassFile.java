@@ -9,12 +9,34 @@ import org.apache.bcel.classfile.*;
 import org.apache.bcel.util.ByteSequence;
 import org.apache.commons.io.IOUtils;
 
+/**
+ * Implements handling of .class byte code for fingerprinting.
+ * 
+ * @author abn
+ * @author gcmurphy
+ */
 public class ClassFile extends File {
 
+	/**
+	 * 
+	 * @param bytes
+	 *            The file as a byte array.
+	 * @param fileName
+	 *            The name of the file provided by the stream.
+	 * @throws IOException
+	 */
 	public ClassFile(byte[] bytes, String fileName) throws IOException {
 		super(ClassFile.normalize(bytes, fileName), fileName);
 	}
 
+	/**
+	 * 
+	 * @param is
+	 *            The file as an input stream.
+	 * @param fileName
+	 *            The name of the file provided by the stream.
+	 * @throws IOException
+	 */
 	public ClassFile(InputStream is, String fileName) throws IOException {
 		this(IOUtils.toByteArray(is), fileName);
 	}
@@ -281,6 +303,16 @@ public class ClassFile extends File {
 		return buf.toString();
 	}
 
+	/**
+	 * The driving function that normalizes given byte code.
+	 * 
+	 * @param bytes
+	 *            The input class as a byte array.
+	 * @param fileName
+	 *            The name of the file.
+	 * @return The normalized bytecode as a byte array.
+	 * @throws IOException
+	 */
 	public static byte[] normalize(byte[] bytes, String fileName)
 			throws IOException {
 		ByteArrayInputStream is = new ByteArrayInputStream(bytes);
