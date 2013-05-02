@@ -40,32 +40,46 @@ public class Metadata {
 	}
 
 	/**
-	 * Attempts to parse a MANIFEST.MF file.
+	 * Attempts to parse a MANIFEST.MF file from an input stream.
 	 * 
 	 * @param is
 	 *            An input stream containing the extracted manifest file.
+	 * @return HashMap of the type {atribute name : attribute value}.
+	 * 
 	 */
 	public static HashMap<String, String> fromManifest(InputStream is) {
-		HashMap<String, String> metadata = new HashMap<String, String>();
-		Manifest mf;
 		try {
-			mf = new Manifest(is);
-			final String[] attribs = {
-					Attributes.Name.MANIFEST_VERSION.toString(),
-					Attributes.Name.IMPLEMENTATION_TITLE.toString(),
-					Attributes.Name.IMPLEMENTATION_URL.toString(),
-					Attributes.Name.IMPLEMENTATION_VENDOR.toString(),
-					Attributes.Name.IMPLEMENTATION_VENDOR_ID.toString(),
-					Attributes.Name.IMPLEMENTATION_VERSION.toString(),
-					Attributes.Name.MAIN_CLASS.toString() };
-			for (String attrib : attribs) {
-				Object o = mf.getEntries().get(attrib);
-				if (o != null) {
-					metadata.put(attrib, o.toString());
-				}
-			}
+			Manifest mf = new Manifest(is);
+			return fromManifest(mf);
+
 		} catch (IOException e) {
 			// Problems? Too bad!
+		}
+		return new HashMap<String, String>();
+	}
+
+	/**
+	 * Extracts required attributes and their values from a {@link Manifest}
+	 * object.
+	 * 
+	 * @param mf
+	 *            A Manifest file.
+	 * @return HashMap of the type {atribute name : attribute value}.
+	 */
+	public static HashMap<String, String> fromManifest(Manifest mf) {
+		HashMap<String, String> metadata = new HashMap<String, String>();
+		final Attributes.Name[] attribs = { Attributes.Name.MANIFEST_VERSION,
+				Attributes.Name.IMPLEMENTATION_TITLE,
+				Attributes.Name.IMPLEMENTATION_URL,
+				Attributes.Name.IMPLEMENTATION_VENDOR,
+				Attributes.Name.IMPLEMENTATION_VENDOR_ID,
+				Attributes.Name.IMPLEMENTATION_VERSION,
+				Attributes.Name.MAIN_CLASS };
+		for (Attributes.Name attrib : attribs) {
+			Object o = mf.getMainAttributes().get(attrib);
+			if (o != null) {
+				metadata.put(attrib.toString(), o.toString());
+			}
 		}
 		return metadata;
 	}

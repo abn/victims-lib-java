@@ -8,8 +8,9 @@ import java.io.IOException;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.zip.ZipEntry;
-import java.util.zip.ZipInputStream;
+import java.util.jar.JarEntry;
+import java.util.jar.JarInputStream;
+import java.util.jar.Manifest;
 
 import org.apache.commons.io.IOUtils;
 
@@ -19,7 +20,7 @@ import org.apache.commons.io.IOUtils;
  * @author abn
  * 
  */
-public class ArchiveFile extends AbstractFile {
+public class JarFile extends AbstractFile {
 	/**
 	 * Indicates if archive contents get processed. Default is true.
 	 */
@@ -29,7 +30,7 @@ public class ArchiveFile extends AbstractFile {
 	protected ArrayList<Object> contents;
 	protected HashMap<String, String> contentFingerprint;
 	protected HashMap<String, String> metadata;
-	protected ZipInputStream zis;
+	protected JarInputStream jis;
 
 	/**
 	 * 
@@ -39,24 +40,18 @@ public class ArchiveFile extends AbstractFile {
 	 *            Name of the file being provided as bytes
 	 * @throws IOException
 	 */
-	public ArchiveFile(byte[] bytes, String fileName) throws IOException {
+	public JarFile(byte[] bytes, String fileName) throws IOException {
 		this.contents = new ArrayList<Object>();
 		this.metadata = new HashMap<String, String>();
 		this.fileName = fileName;
-		this.zis = new ZipInputStream(new ByteArrayInputStream(bytes));
+		this.jis = new JarInputStream(new ByteArrayInputStream(bytes));
 		ByteArrayOutputStream bos = new ByteArrayOutputStream();
 		Content file;
 		while ((file = getNextFile()) != null) {
 			bos.write(file.bytes);
 
 			// Handle metadata/special cases
-			if (file.name.toLowerCase().endsWith("manifest.mf")) {
-				// handle manifest.mf files
-				// FIXME: java.util.jar.Manifest does not seem to like this
-				// sometimes.
-				InputStream is = new ByteArrayInputStream(file.bytes);
-				metadata.putAll(Metadata.fromManifest(is));
-			} else if (file.name.toLowerCase().endsWith("pom.xml")) {
+			if (file.name.toLowerCase().endsWith("pom.properties")) {
 				// handle pom files
 				InputStream is = new ByteArrayInputStream(file.bytes);
 				metadata.putAll(Metadata.fromPom(is));
@@ -73,11 +68,17 @@ public class ArchiveFile extends AbstractFile {
 			}
 		}
 
+		// Process the metadata from the manifest if available
+		Manifest mf = jis.getManifest();
+		if (mf != null) {
+			metadata.putAll(Metadata.fromManifest(mf));
+		}
+
 		// TODO: decide if we want to keep the content-only hash
 		this.contentFingerprint = Processor.fingerprint(bos.toByteArray());
 		this.fingerprints = Processor.fingerprint(bytes);
 		bos.close();
-		zis.close();
+		jis.close();
 	}
 
 	/**
@@ -86,7 +87,7 @@ public class ArchiveFile extends AbstractFile {
 	 *            Name of the file being process, expected as path on disk.
 	 * @throws IOException
 	 */
-	public ArchiveFile(String fileName) throws IOException {
+	public JarFile(String fileName) throws IOException {
 		this(new FileInputStream(fileName), fileName);
 	}
 
@@ -98,7 +99,7 @@ public class ArchiveFile extends AbstractFile {
 	 *            The name of the file provided by the stream.
 	 * @throws IOException
 	 */
-	public ArchiveFile(InputStream is, String fileName) throws IOException {
+	public JarFile(InputStream is, String fileName) throws IOException {
 		this(IOUtils.toByteArray(is), fileName);
 	}
 
@@ -106,7 +107,7 @@ public class ArchiveFile extends AbstractFile {
 		HashMap<String, Object> result = super.getRecord();
 		result.put(Processor.CONTENT_KEY, contents);
 		result.put(Processor.CONTENT_FINGERPRINT_KEY, contentFingerprint);
-		if (metadata.size() > 0){
+		if (metadata.size() > 0) {
 			result.put(Processor.METADATA_KEY, metadata);
 		}
 		return result;
@@ -118,11 +119,11 @@ public class ArchiveFile extends AbstractFile {
 	 * @throws IOException
 	 */
 	protected Content getNextFile() throws IOException {
-		ZipEntry entry;
-		while ((entry = this.zis.getNextEntry()) != null) {
+		JarEntry entry;
+		while ((entry = jis.getNextJarEntry()) != null) {
 			ByteArrayOutputStream bos = new ByteArrayOutputStream();
 			byte[] data = new byte[BUFFER];
-			while (this.zis.read(data, 0, BUFFER) != -1) {
+			while (jis.read(data, 0, BUFFER) != -1) {
 				bos.write(data);
 			}
 			Content file = new Content(entry.getName(), bos.toByteArray());
@@ -130,7 +131,6 @@ public class ArchiveFile extends AbstractFile {
 			return file;
 		}
 		return null;
-
 	}
 
 	/**

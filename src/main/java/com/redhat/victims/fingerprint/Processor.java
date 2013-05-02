@@ -21,8 +21,8 @@ import org.apache.commons.io.IOUtils;
  */
 public class Processor {
 	private static ArrayList<String> ALGORITHMS = new ArrayList<String>();
-	private static DefaultHashMap<String, Class<?>> TYPE_MAP = 
-			new DefaultHashMap<String, Class<?>>(File.class);
+	private static DefaultHashMap<String, Class<?>> TYPE_MAP = new DefaultHashMap<String, Class<?>>(
+			File.class);
 
 	// Keys used in records
 	public static String CONTENT_KEY = "content";
@@ -34,13 +34,13 @@ public class Processor {
 	// Static Initializations
 	static {
 		// Algorithms
-		ALGORITHMS.add("SHA1");
 		ALGORITHMS.add("MD5");
+		ALGORITHMS.add("SHA1");
 		ALGORITHMS.add("SHA-512");
 
 		// File Types
 		TYPE_MAP.put(".class", ClassFile.class);
-		TYPE_MAP.put(".jar", ArchiveFile.class);
+		TYPE_MAP.put(".jar", JarFile.class);
 	}
 
 	/**
@@ -89,7 +89,7 @@ public class Processor {
 							String.class);
 					Object object = ctor.newInstance(new Object[] { bytes,
 							fileName });
-					HashMap<String, Object> record = ((Interface) object)
+					HashMap<String, Object> record = ((FingerprintInterface) object)
 							.getRecord();
 					return record;
 				}
@@ -205,7 +205,6 @@ public class Processor {
 			} catch (IOException e) {
 				// Silently ignore invalids
 			}
-
 		}
 	}
 }

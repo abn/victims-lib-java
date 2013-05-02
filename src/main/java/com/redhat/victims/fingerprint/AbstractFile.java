@@ -8,7 +8,7 @@ import java.util.HashMap;
  * @author abn
  * 
  */
-public abstract class AbstractFile implements Interface {
+public abstract class AbstractFile implements FingerprintInterface {
 	protected HashMap<String, String> fingerprints = null;
 	protected String fileName = null;
 

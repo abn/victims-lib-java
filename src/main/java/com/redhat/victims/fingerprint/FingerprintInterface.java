@@ -8,7 +8,7 @@ import java.util.HashMap;
  * @author abn
  * 
  */
-public interface Interface {
+public interface FingerprintInterface {
 
 	/**
 	 * Gets the hashmap of fingerprints
