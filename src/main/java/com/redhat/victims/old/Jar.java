@@ -16,11 +16,11 @@
  * along with enforce-victims-rule.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-package com.redhat.victims;
+package com.redhat.victims.old;
 
 
-import com.redhat.victims.Archive;
-import com.redhat.victims.ArchiveVisitor;
+import com.redhat.victims.old.Archive;
+import com.redhat.victims.old.ArchiveVisitor;
 import java.io.IOException;
 import java.util.Enumeration;
 import java.util.zip.ZipEntry;

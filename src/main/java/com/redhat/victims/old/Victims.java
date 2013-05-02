@@ -16,7 +16,7 @@
  * along with enforce-victims-rule.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-package com.redhat.victims;
+package com.redhat.victims.old;
 
 import java.io.IOException;
 import org.json.JSONException;

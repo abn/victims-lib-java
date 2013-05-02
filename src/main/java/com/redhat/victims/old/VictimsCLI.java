@@ -17,7 +17,7 @@
  *
  */
 
-package com.redhat.victims;
+package com.redhat.victims.old;
 
 import java.io.BufferedReader;
 import java.io.InputStreamReader;

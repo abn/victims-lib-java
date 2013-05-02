@@ -16,9 +16,9 @@
  * along with enforce-victims-rule.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-package com.redhat.victims;
+package com.redhat.victims.old;
 
-import com.redhat.victims.ArchiveVisitor;
+import com.redhat.victims.old.ArchiveVisitor;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileWriter;
