@@ -1,6 +1,6 @@
 package com.redhat.victims.fingerprint;
 
-import java.util.HashMap;
+import com.redhat.victims.VictimsRecord;
 
 /**
  * The interface implemented by all implementations for handling fingerprinting.
@@ -15,7 +15,7 @@ public interface FingerprintInterface {
 	 * 
 	 * @return A hashmap of the for {algorithm:hash}
 	 */
-	public HashMap<String, String> getFingerprints();
+	public Fingerprint getFingerprint();
 
 	/**
 	 * Creates a 'record' with available info for the processed file. This
@@ -24,5 +24,6 @@ public interface FingerprintInterface {
 	 * 
 	 * @return A information record correspoding to the file processed.
 	 */
-	public HashMap<String, Object> getRecord();
+	public VictimsRecord getRecord();
+
 }

@@ -1,6 +1,7 @@
 package com.redhat.victims.fingerprint;
 
-import java.util.HashMap;
+import com.redhat.victims.Constants;
+import com.redhat.victims.VictimsRecord;
 
 /**
  * Provides an abstract class for all file types that can be fingerprinted.
@@ -9,7 +10,7 @@ import java.util.HashMap;
  * 
  */
 public abstract class AbstractFile implements FingerprintInterface {
-	protected HashMap<String, String> fingerprints = null;
+	protected Fingerprint fingerprint = null;
 	protected String fileName = null;
 
 	/**
@@ -22,14 +23,14 @@ public abstract class AbstractFile implements FingerprintInterface {
 	/**
 	 * @return the fingerprints
 	 */
-	public HashMap<String, String> getFingerprints() {
-		return fingerprints;
+	public Fingerprint getFingerprint() {
+		return fingerprint;
 	}
 
-	public HashMap<String, Object> getRecord() {
-		HashMap<String, Object> result = new HashMap<String, Object>();
-		result.put(Processor.FILENAME_KEY, this.fileName);
-		result.put(Processor.FINGERPRINT_KEY, fingerprints);
+	public VictimsRecord getRecord() {
+		VictimsRecord result = new VictimsRecord();
+		result.put(Constants.KEY_FILENAME, fileName);
+		result.put(Constants.KEY_FINGERPRINT, fingerprint);
 		return result;
 	}
 }

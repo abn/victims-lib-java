@@ -22,7 +22,7 @@ public class File extends AbstractFile {
 	 */
 	public File(byte[] bytes, String fileName) {
 		this.fileName = fileName;
-		this.fingerprints = Processor.fingerprint(bytes);
+		this.fingerprint = Processor.fingerprint(bytes);
 	}
 
 	/**

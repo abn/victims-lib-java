@@ -12,6 +12,9 @@ import java.util.HashMap;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.io.IOUtils;
 
+import com.redhat.victims.Constants;
+import com.redhat.victims.VictimsRecord;
+
 /**
  * The Processor acts as an entry point for handling fingerprinting. This class
  * also hadles dynamic processing of files/byte arrays/input streams.
@@ -20,9 +23,9 @@ import org.apache.commons.io.IOUtils;
  * 
  */
 public class Processor {
-	private static ArrayList<String> ALGORITHMS = new ArrayList<String>();
-	private static DefaultHashMap<String, Class<?>> TYPE_MAP = new DefaultHashMap<String, Class<?>>(
-			File.class);
+	private static ArrayList<Constants> ALGORITHMS = new ArrayList<Constants>();
+	private static DefaultHashMap<String, Class<?>> TYPE_MAP = 
+			new DefaultHashMap<String, Class<?>>(File.class);
 
 	// Keys used in records
 	public static String CONTENT_KEY = "content";
@@ -34,9 +37,9 @@ public class Processor {
 	// Static Initializations
 	static {
 		// Algorithms
-		ALGORITHMS.add("MD5");
-		ALGORITHMS.add("SHA1");
-		ALGORITHMS.add("SHA-512");
+		ALGORITHMS.add(Constants.MD5);
+		ALGORITHMS.add(Constants.SHA1);
+		ALGORITHMS.add(Constants.SHA512);
 
 		// File Types
 		TYPE_MAP.put(".class", ClassFile.class);
@@ -71,13 +74,9 @@ public class Processor {
 	 *            The file to process as a byte array.
 	 * @param fileName
 	 *            The name of the file being processed.
-	 * @return Information record. This will be of the format indicated below.
-	 *         Only those keys with values available will be present. record = {
-	 *         FILENAME_KEY : string CONTENT_KEY : Array List of records (if
-	 *         archive) CONTENT_FINGERPRINT_KEY : { algorithm:hash }
-	 *         FINGERPRINT_KEY : { algorithm:hash } METADATA_KEY : {key:val} }
+	 * @return Information record of type {@link VictimsRecord}
 	 */
-	public static HashMap<String, Object> process(byte[] bytes, String fileName) {
+	public static VictimsRecord process(byte[] bytes, String fileName) {
 		String fileType = Processor.getFileType(fileName);
 		if (Processor.isKnownType(fileType)) {
 			// Only handle types we know about eg: .class .jar
@@ -89,9 +88,7 @@ public class Processor {
 							String.class);
 					Object object = ctor.newInstance(new Object[] { bytes,
 							fileName });
-					HashMap<String, Object> record = ((FingerprintInterface) object)
-							.getRecord();
-					return record;
+					return ((FingerprintInterface) object).getRecord();
 				}
 			} catch (Exception e) {
 				// TODO: Handle bad file
@@ -105,11 +102,11 @@ public class Processor {
 	 *            The file as an input stream.
 	 * @param fileName
 	 *            The name of the file provided by the stream.
-	 * @return Information record.
+	 * @return Information record of type {@link VictimsRecord}
 	 * @throws IOException
 	 */
-	public static HashMap<String, Object> process(InputStream is,
-			String fileName) throws IOException {
+	public static VictimsRecord process(InputStream is, String fileName)
+			throws IOException {
 		return process(IOUtils.toByteArray(is), fileName);
 	}
 
@@ -117,11 +114,10 @@ public class Processor {
 	 * 
 	 * @param fileName
 	 *            The name of the file provided by the stream.
-	 * @return Information record.
+	 * @return Information record of type {@link VictimsRecord}
 	 * @throws IOException
 	 */
-	public static HashMap<String, Object> process(String fileName)
-			throws IOException {
+	public static VictimsRecord process(String fileName) throws IOException {
 		FileInputStream fis = new FileInputStream(fileName);
 		return process(fis, fileName);
 	}
@@ -151,12 +147,12 @@ public class Processor {
 	 *            A byte array whose content is to be fingerprinted.
 	 * @return Hashmap of the form {algorithm:hash}
 	 */
-	public static HashMap<String, String> fingerprint(byte[] bytes) {
-		HashMap<String, String> fingerprints = new HashMap<String, String>();
-		for (String algorithm : ALGORITHMS) {
+	public static Fingerprint fingerprint(byte[] bytes) {
+		Fingerprint fingerprints = new Fingerprint();
+		for (Constants algorithm : ALGORITHMS) {
 			try {
 				MessageDigest md = MessageDigest.getInstance(algorithm
-						.toUpperCase());
+						.toString().toUpperCase());
 				fingerprints.put(algorithm,
 						new String(Hex.encodeHex(md.digest(bytes))));
 			} catch (NoSuchAlgorithmException e) {
@@ -195,12 +191,12 @@ public class Processor {
 		}
 	}
 
-	public static void main(String argv[]) {
+	public static void main(String argv[]) throws IOException {
 		// Main method for testing
 		// DEBUG CODE
 		for (int i = 0; i < argv.length; i++) {
 			try {
-				HashMap<String, Object> record = process(argv[i]);
+				VictimsRecord record = process(argv[i]);
 				System.out.println(record);
 			} catch (IOException e) {
 				// Silently ignore invalids

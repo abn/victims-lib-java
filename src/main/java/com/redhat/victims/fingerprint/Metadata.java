@@ -13,7 +13,8 @@ import java.util.jar.Manifest;
  * @author gcmurphy
  * 
  */
-public class Metadata {
+@SuppressWarnings("serial")
+public class Metadata extends HashMap<String, String> {
 
 	/**
 	 * Attempts to parse a pom.xml file.
@@ -21,8 +22,8 @@ public class Metadata {
 	 * @param is
 	 *            An input stream containing the extracted POM file.
 	 */
-	public static HashMap<String, String> fromPom(InputStream is) {
-		HashMap<String, String> metadata = new HashMap<String, String>();
+	public static Metadata fromPom(InputStream is) {
+		Metadata metadata = new Metadata();
 		BufferedReader input = new BufferedReader(new InputStreamReader(is));
 		try {
 			String line;
@@ -67,7 +68,7 @@ public class Metadata {
 	 * @return HashMap of the type {atribute name : attribute value}.
 	 */
 	public static HashMap<String, String> fromManifest(Manifest mf) {
-		HashMap<String, String> metadata = new HashMap<String, String>();
+		Metadata metadata = new Metadata();
 		final Attributes.Name[] attribs = { Attributes.Name.MANIFEST_VERSION,
 				Attributes.Name.IMPLEMENTATION_TITLE,
 				Attributes.Name.IMPLEMENTATION_URL,

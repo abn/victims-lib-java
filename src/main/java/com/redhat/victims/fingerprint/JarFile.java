@@ -7,12 +7,14 @@ import java.io.InputStream;
 import java.io.IOException;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
 import java.util.jar.Manifest;
 
 import org.apache.commons.io.IOUtils;
+
+import com.redhat.victims.Constants;
+import com.redhat.victims.VictimsRecord;
 
 /**
  * Implements handing of Archive files for fingerprinting.
@@ -28,8 +30,8 @@ public class JarFile extends AbstractFile {
 	private static final int BUFFER = 2048;
 
 	protected ArrayList<Object> contents;
-	protected HashMap<String, String> contentFingerprint;
-	protected HashMap<String, String> metadata;
+	protected Fingerprint contentFingerprint;
+	protected Metadata metadata;
 	protected JarInputStream jis;
 
 	/**
@@ -42,7 +44,7 @@ public class JarFile extends AbstractFile {
 	 */
 	public JarFile(byte[] bytes, String fileName) throws IOException {
 		this.contents = new ArrayList<Object>();
-		this.metadata = new HashMap<String, String>();
+		this.metadata = new Metadata();
 		this.fileName = fileName;
 		this.jis = new JarInputStream(new ByteArrayInputStream(bytes));
 		ByteArrayOutputStream bos = new ByteArrayOutputStream();
@@ -60,8 +62,7 @@ public class JarFile extends AbstractFile {
 			// This is separate as we may or may not want to fingerprint
 			// all files.
 			if (RECURSIVE) {
-				HashMap<String, Object> record = Processor.process(file.bytes,
-						file.name);
+				VictimsRecord record = Processor.process(file.bytes, file.name);
 				if (record != null) {
 					contents.add(record);
 				}
@@ -76,7 +77,7 @@ public class JarFile extends AbstractFile {
 
 		// TODO: decide if we want to keep the content-only hash
 		this.contentFingerprint = Processor.fingerprint(bos.toByteArray());
-		this.fingerprints = Processor.fingerprint(bytes);
+		this.fingerprint = Processor.fingerprint(bytes);
 		bos.close();
 		jis.close();
 	}
@@ -103,12 +104,12 @@ public class JarFile extends AbstractFile {
 		this(IOUtils.toByteArray(is), fileName);
 	}
 
-	public HashMap<String, Object> getRecord() {
-		HashMap<String, Object> result = super.getRecord();
-		result.put(Processor.CONTENT_KEY, contents);
-		result.put(Processor.CONTENT_FINGERPRINT_KEY, contentFingerprint);
+	public VictimsRecord getRecord() {
+		VictimsRecord result = super.getRecord();
+		result.put(Constants.KEY_CONTENT, contents);
+		result.put(Constants.KEY_CONTENT_FINGERPRINT, contentFingerprint);
 		if (metadata.size() > 0) {
-			result.put(Processor.METADATA_KEY, metadata);
+			result.put(Constants.KEY_METADATA, metadata);
 		}
 		return result;
 	}
@@ -120,11 +121,12 @@ public class JarFile extends AbstractFile {
 	 */
 	protected Content getNextFile() throws IOException {
 		JarEntry entry;
-		while ((entry = jis.getNextJarEntry()) != null) {
+		if ((entry = jis.getNextJarEntry()) != null) {
 			ByteArrayOutputStream bos = new ByteArrayOutputStream();
 			byte[] data = new byte[BUFFER];
-			while (jis.read(data, 0, BUFFER) != -1) {
-				bos.write(data);
+			int size;
+			while ((size = jis.read(data, 0, data.length)) != -1) {
+				bos.write(data, 0, size);
 			}
 			Content file = new Content(entry.getName(), bos.toByteArray());
 			bos.close();
