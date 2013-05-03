@@ -1,45 +1,137 @@
 package com.redhat.victims;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.jar.Attributes;
 
+import org.apache.commons.io.FilenameUtils;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.redhat.victims.fingerprint.Algorithms;
+import com.redhat.victims.fingerprint.Artifact;
 import com.redhat.victims.fingerprint.Fingerprint;
 import com.redhat.victims.fingerprint.Metadata;
 
 /**
- * The main container for a hash map data structure used to store victims record
- * information.
+ * This is the java class relating to victims records.
  * 
+ * @author gcmurphy
  * @author abn
  * 
  */
-@SuppressWarnings("serial")
-public class VictimsRecord extends HashMap<Constants, Object> {
-	/**
-	 * Maintains a list of value types that can be added to the record.
-	 */
-	protected static ArrayList<Class<?>> PERMITTED_VALUE_TYPES = new ArrayList<Class<?>>();
-	static {
-		PERMITTED_VALUE_TYPES.add(VictimsRecord.class);
-		PERMITTED_VALUE_TYPES.add(String.class);
-		PERMITTED_VALUE_TYPES.add(ArrayList.class);
-		PERMITTED_VALUE_TYPES.add(Fingerprint.class);
-		PERMITTED_VALUE_TYPES.add(Metadata.class);
-	};
+public class VictimsRecord {
+	public static final String DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss";
+	public static final String SCHEMA_VERSION = "2.0";
 
-	public VictimsRecord() {
-		super();
+	// structure info
+	public String db_version = SCHEMA_VERSION;
+
+	// record information
+	public RecordStatus status;
+	public Date date;
+	public Date submittedon;
+	public String submitter;
+
+	// entry information
+	public ArrayList<String> cves;
+	public String name;
+	public String format;
+	public String vendor;
+	public String version;
+	public ArrayList<MetaRecord> meta;
+	public String hash;
+	public HashRecords hashes;
+
+	public static VictimsRecord fromJSON(String jsonStr) {
+		Gson gson = new GsonBuilder().setDateFormat(DATE_FORMAT).create();
+		return gson.fromJson(jsonStr, VictimsRecord.class);
 	}
 
-	@Override
-	public Object put(Constants key, Object value)
-			throws IllegalArgumentException {
-		if (!PERMITTED_VALUE_TYPES.contains(value.getClass())) {
-			System.out.println(key.toString());
-			throw new IllegalArgumentException(String.format(
-					"Values of class type <%s> are not permitted in <%s>",
-					value.getClass().getName(), this.getClass().getName()));
+	public String toString() {
+		Gson gson = new GsonBuilder().setDateFormat(DATE_FORMAT).create();
+		return gson.toJson(this);
+	}
+
+	private void setFromMetadata(Metadata md) {
+		// TODO: add pom.properties support?
+		String vendorkey = Attributes.Name.IMPLEMENTATION_VENDOR.toString();
+		String versionkey = Attributes.Name.IMPLEMENTATION_VERSION.toString();
+		String namekey = Attributes.Name.IMPLEMENTATION_VERSION.toString();
+		if (this.vendor == null) {
+			this.vendor = md.get(vendorkey);
 		}
-		return super.put(key, value);
+		if (this.version == null) {
+			this.version = md.get(versionkey);
+		}
+		if (this.name == null) {
+			this.name = md.get(namekey);
+		}
+	}
+
+	public VictimsRecord(Artifact artifact) {
+		this.status = RecordStatus.NEW;
+		this.meta = new ArrayList<MetaRecord>();
+		this.hash = artifact.fingerprint().get(Algorithms.SHA512);
+		this.hashes = new HashRecords();
+		this.cves = new ArrayList<String>();
+
+		// Process the metadatas if available
+		ArrayList<Metadata> metadatas = artifact.metadata();
+		if (metadatas != null) {
+			for (Metadata md : artifact.metadata()) {
+				setFromMetadata(md);
+				MetaRecord mr = new MetaRecord();
+				mr.put("properties", md);
+				meta.add(mr);
+			}
+		}
+
+		if (this.name == null) {
+			// If metadata did not provide a name then use filename
+			this.name = FilenameUtils.getBaseName(artifact.filename());
+		}
+
+		// Reorganize hashes if available
+		HashRecord sha512 = new HashRecord();
+		HashRecord sha1 = new HashRecord();
+		for (Artifact file : artifact.contents()) {
+			if (file.filetype().equals(".class")) {
+				Fingerprint fingerprint = file.fingerprint();
+				if (fingerprint != null) {
+					if (fingerprint.containsKey(Algorithms.SHA512)) {
+						sha512.put(fingerprint.get(Algorithms.SHA512),
+								file.filename());
+					}
+					if (fingerprint.containsKey(Algorithms.SHA1)) {
+						sha1.put(fingerprint.get(Algorithms.SHA1),
+								file.filename());
+					}
+				}
+			}
+		}
+		this.hashes.put("sha512", sha512);
+		this.hashes.put("sha1", sha1);
+	}
+
+	public static enum RecordStatus {
+		SUBMITTED, RELEASED, NEW
+	};
+
+	@SuppressWarnings("serial")
+	public static class StringMap extends HashMap<String, String> {
+	}
+
+	@SuppressWarnings("serial")
+	public static class HashRecord extends HashMap<String, Object> {
+	}
+
+	@SuppressWarnings("serial")
+	public static class HashRecords extends HashMap<String, HashRecord> {
+	}
+
+	@SuppressWarnings("serial")
+	public static class MetaRecord extends HashMap<String, Metadata> {
 	}
 }

@@ -13,9 +13,6 @@ import java.util.jar.Manifest;
 
 import org.apache.commons.io.IOUtils;
 
-import com.redhat.victims.Constants;
-import com.redhat.victims.VictimsRecord;
-
 /**
  * Implements handing of Archive files for fingerprinting.
  * 
@@ -31,7 +28,7 @@ public class JarFile extends AbstractFile {
 
 	protected ArrayList<Object> contents;
 	protected Fingerprint contentFingerprint;
-	protected Metadata metadata;
+	protected ArrayList<Metadata> metadata;
 	protected JarInputStream jis;
 
 	/**
@@ -44,7 +41,7 @@ public class JarFile extends AbstractFile {
 	 */
 	public JarFile(byte[] bytes, String fileName) throws IOException {
 		this.contents = new ArrayList<Object>();
-		this.metadata = new Metadata();
+		this.metadata = new ArrayList<Metadata>();
 		this.fileName = fileName;
 		this.jis = new JarInputStream(new ByteArrayInputStream(bytes));
 		ByteArrayOutputStream bos = new ByteArrayOutputStream();
@@ -56,13 +53,13 @@ public class JarFile extends AbstractFile {
 			if (file.name.toLowerCase().endsWith("pom.properties")) {
 				// handle pom files
 				InputStream is = new ByteArrayInputStream(file.bytes);
-				metadata.putAll(Metadata.fromPom(is));
+				metadata.add(Metadata.fromPom(is));
 			}
 
 			// This is separate as we may or may not want to fingerprint
 			// all files.
 			if (RECURSIVE) {
-				VictimsRecord record = Processor.process(file.bytes, file.name);
+				Artifact record = Processor.process(file.bytes, file.name);
 				if (record != null) {
 					contents.add(record);
 				}
@@ -72,7 +69,7 @@ public class JarFile extends AbstractFile {
 		// Process the metadata from the manifest if available
 		Manifest mf = jis.getManifest();
 		if (mf != null) {
-			metadata.putAll(Metadata.fromManifest(mf));
+			metadata.add(Metadata.fromManifest(mf));
 		}
 
 		// TODO: decide if we want to keep the content-only hash
@@ -104,13 +101,11 @@ public class JarFile extends AbstractFile {
 		this(IOUtils.toByteArray(is), fileName);
 	}
 
-	public VictimsRecord getRecord() {
-		VictimsRecord result = super.getRecord();
-		result.put(Constants.KEY_CONTENT, contents);
-		result.put(Constants.KEY_CONTENT_FINGERPRINT, contentFingerprint);
-		if (metadata.size() > 0) {
-			result.put(Constants.KEY_METADATA, metadata);
-		}
+	public Artifact getRecord() {
+		Artifact result = super.getRecord();
+		result.put(Key.CONTENT, contents);
+		result.put(Key.CONTENT_FINGERPRINT, contentFingerprint);
+		result.put(Key.METADATA, metadata);
 		return result;
 	}
 

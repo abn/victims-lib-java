@@ -6,14 +6,10 @@ import java.io.InputStream;
 import java.lang.reflect.Constructor;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
 import java.util.HashMap;
 
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.io.IOUtils;
-
-import com.redhat.victims.Constants;
-import com.redhat.victims.VictimsRecord;
 
 /**
  * The Processor acts as an entry point for handling fingerprinting. This class
@@ -23,7 +19,6 @@ import com.redhat.victims.VictimsRecord;
  * 
  */
 public class Processor {
-	private static ArrayList<Constants> ALGORITHMS = new ArrayList<Constants>();
 	private static DefaultHashMap<String, Class<?>> TYPE_MAP = 
 			new DefaultHashMap<String, Class<?>>(File.class);
 
@@ -36,11 +31,6 @@ public class Processor {
 
 	// Static Initializations
 	static {
-		// Algorithms
-		ALGORITHMS.add(Constants.MD5);
-		ALGORITHMS.add(Constants.SHA1);
-		ALGORITHMS.add(Constants.SHA512);
-
 		// File Types
 		TYPE_MAP.put(".class", ClassFile.class);
 		TYPE_MAP.put(".jar", JarFile.class);
@@ -74,9 +64,9 @@ public class Processor {
 	 *            The file to process as a byte array.
 	 * @param fileName
 	 *            The name of the file being processed.
-	 * @return Information record of type {@link VictimsRecord}
+	 * @return Information record of type {@link Artifact}
 	 */
-	public static VictimsRecord process(byte[] bytes, String fileName) {
+	public static Artifact process(byte[] bytes, String fileName) {
 		String fileType = Processor.getFileType(fileName);
 		if (Processor.isKnownType(fileType)) {
 			// Only handle types we know about eg: .class .jar
@@ -102,10 +92,10 @@ public class Processor {
 	 *            The file as an input stream.
 	 * @param fileName
 	 *            The name of the file provided by the stream.
-	 * @return Information record of type {@link VictimsRecord}
+	 * @return Information record of type {@link Artifact}
 	 * @throws IOException
 	 */
-	public static VictimsRecord process(InputStream is, String fileName)
+	public static Artifact process(InputStream is, String fileName)
 			throws IOException {
 		return process(IOUtils.toByteArray(is), fileName);
 	}
@@ -114,10 +104,10 @@ public class Processor {
 	 * 
 	 * @param fileName
 	 *            The name of the file provided by the stream.
-	 * @return Information record of type {@link VictimsRecord}
+	 * @return Information record of type {@link Artifact}
 	 * @throws IOException
 	 */
-	public static VictimsRecord process(String fileName) throws IOException {
+	public static Artifact process(String fileName) throws IOException {
 		FileInputStream fis = new FileInputStream(fileName);
 		return process(fis, fileName);
 	}
@@ -148,18 +138,18 @@ public class Processor {
 	 * @return Hashmap of the form {algorithm:hash}
 	 */
 	public static Fingerprint fingerprint(byte[] bytes) {
-		Fingerprint fingerprints = new Fingerprint();
-		for (Constants algorithm : ALGORITHMS) {
+		Fingerprint fingerprint = new Fingerprint();
+		for (Algorithms algorithm : Algorithms.values()) {
 			try {
 				MessageDigest md = MessageDigest.getInstance(algorithm
 						.toString().toUpperCase());
-				fingerprints.put(algorithm,
+				fingerprint.put(algorithm,
 						new String(Hex.encodeHex(md.digest(bytes))));
 			} catch (NoSuchAlgorithmException e) {
 				// Do nothing just skip
 			}
 		}
-		return fingerprints;
+		return fingerprint;
 	}
 
 	/**
@@ -188,19 +178,6 @@ public class Processor {
 			V v = super.get(k);
 			return ((v == null) && !this.containsKey(k)) ? this.defaultValue
 					: v;
-		}
-	}
-
-	public static void main(String argv[]) throws IOException {
-		// Main method for testing
-		// DEBUG CODE
-		for (int i = 0; i < argv.length; i++) {
-			try {
-				VictimsRecord record = process(argv[i]);
-				System.out.println(record);
-			} catch (IOException e) {
-				// Silently ignore invalids
-			}
 		}
 	}
 }

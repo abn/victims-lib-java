@@ -1,8 +1,5 @@
 package com.redhat.victims.fingerprint;
 
-import com.redhat.victims.Constants;
-import com.redhat.victims.VictimsRecord;
-
 /**
  * Provides an abstract class for all file types that can be fingerprinted.
  * 
@@ -27,10 +24,11 @@ public abstract class AbstractFile implements FingerprintInterface {
 		return fingerprint;
 	}
 
-	public VictimsRecord getRecord() {
-		VictimsRecord result = new VictimsRecord();
-		result.put(Constants.KEY_FILENAME, fileName);
-		result.put(Constants.KEY_FINGERPRINT, fingerprint);
+	public Artifact getRecord() {
+		Artifact result = new Artifact();
+		result.put(Key.FILENAME, fileName);
+		result.put(Key.FILETYPE, Processor.getFileType(fileName));
+		result.put(Key.FINGERPRINT, fingerprint);
 		return result;
 	}
 }

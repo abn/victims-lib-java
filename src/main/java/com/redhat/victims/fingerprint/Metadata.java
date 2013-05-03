@@ -48,7 +48,7 @@ public class Metadata extends HashMap<String, String> {
 	 * @return HashMap of the type {atribute name : attribute value}.
 	 * 
 	 */
-	public static HashMap<String, String> fromManifest(InputStream is) {
+	public static Metadata fromManifest(InputStream is) {
 		try {
 			Manifest mf = new Manifest(is);
 			return fromManifest(mf);
@@ -56,7 +56,7 @@ public class Metadata extends HashMap<String, String> {
 		} catch (IOException e) {
 			// Problems? Too bad!
 		}
-		return new HashMap<String, String>();
+		return new Metadata();
 	}
 
 	/**
@@ -67,7 +67,7 @@ public class Metadata extends HashMap<String, String> {
 	 *            A Manifest file.
 	 * @return HashMap of the type {atribute name : attribute value}.
 	 */
-	public static HashMap<String, String> fromManifest(Manifest mf) {
+	public static Metadata fromManifest(Manifest mf) {
 		Metadata metadata = new Metadata();
 		final Attributes.Name[] attribs = { Attributes.Name.MANIFEST_VERSION,
 				Attributes.Name.IMPLEMENTATION_TITLE,

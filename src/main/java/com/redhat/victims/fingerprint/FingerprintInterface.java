@@ -1,7 +1,5 @@
 package com.redhat.victims.fingerprint;
 
-import com.redhat.victims.VictimsRecord;
-
 /**
  * The interface implemented by all implementations for handling fingerprinting.
  * 
@@ -24,6 +22,6 @@ public interface FingerprintInterface {
 	 * 
 	 * @return A information record correspoding to the file processed.
 	 */
-	public VictimsRecord getRecord();
+	public Artifact getRecord();
 
 }
