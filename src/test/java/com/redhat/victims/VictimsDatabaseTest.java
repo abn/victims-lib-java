@@ -10,6 +10,7 @@ import java.util.HashSet;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.AfterClass;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -21,13 +22,12 @@ import com.redhat.victims.mock.MockEnvironment;
 
 public class VictimsDatabaseTest {
 
-	private static VictimsDBInterface vdb;
+	protected static VictimsDBInterface vdb = null;
 
 	@BeforeClass
 	public static void setUp() throws IOException, VictimsException {
 		File updateResponse = new File(Resources.TEST_RESPONSE);
 		MockEnvironment.setUp(updateResponse, null);
-		sync();
 	}
 
 	@AfterClass
@@ -38,6 +38,23 @@ public class VictimsDatabaseTest {
 	public static void sync() throws VictimsException {
 		vdb = VictimsDB.db();
 		vdb.synchronize();
+	}
+
+	@Before
+	public void initiate() throws VictimsException {
+		// we do this here and not in setUp to allow for different backends
+		// to share same test cases
+		if (vdb == null) {
+			sync();
+		}
+	}
+
+	protected static void resetProperty(String key, String old) {
+		if (old != null) {
+			System.setProperty(key, old);
+		} else {
+			System.clearProperty(key);
+		}
 	}
 
 	@Test
@@ -87,23 +104,5 @@ public class VictimsDatabaseTest {
 	public void testResync() throws VictimsException {
 		VictimsDBInterface vdb = VictimsDB.db();
 		vdb.synchronize();
-	}
-
-	@Test(expected = VictimsException.class)
-	public void testDerby() throws IOException, VictimsException {
-		String old = System.getProperty(VictimsConfig.Key.DB_DRIVER);
-		try {
-			System.setProperty(VictimsConfig.Key.DB_DRIVER,
-					"org.apache.derby.jdbc.EmbeddedDriver");
-			VictimsDBInterface vdb = VictimsDB.sqlDB();
-			vdb.synchronize();
-		} finally {
-			if (old != null) {
-				System.setProperty(VictimsConfig.Key.DB_DRIVER, old);
-			} else {
-				System.clearProperty(VictimsConfig.Key.DB_DRIVER);
-			}
-		}
-
 	}
 }

@@ -44,13 +44,14 @@ import com.redhat.victims.VictimsRecord;
 import com.redhat.victims.VictimsResultCache;
 import com.redhat.victims.VictimsService;
 import com.redhat.victims.VictimsService.RecordStream;
+import com.redhat.victims.database.VictimsDB.Driver;
 import com.redhat.victims.fingerprint.Algorithms;
 
 /**
  * This class implements {@link VictimsDBInterface} for SQL databases.
- *
+ * 
  * @author abn
- *
+ * 
  */
 public class VictimsSqlDB extends VictimsSQL implements VictimsDBInterface {
 	// The default file for storing the last sync'ed {@link Date}
@@ -60,7 +61,7 @@ public class VictimsSqlDB extends VictimsSQL implements VictimsDBInterface {
 
 	/**
 	 * Create a new instance with the given parameters.
-	 *
+	 * 
 	 * @param driver
 	 *            The driver class to use.
 	 * @param dbUrl
@@ -74,6 +75,19 @@ public class VictimsSqlDB extends VictimsSQL implements VictimsDBInterface {
 	 */
 	public VictimsSqlDB() throws VictimsException {
 		super();
+
+		// validate configuration
+		String driver = VictimsConfig.dbDriver();
+		String dbUrl = VictimsConfig.dbUrl();
+		if (!driver.equals(VictimsDB.defaultDriver())) {
+			if (!Driver.exists(driver) && dbUrl.equals(VictimsDB.defaultURL())) {
+				// Custom drivers require custom urls
+				throw new VictimsException(
+						"A custom JDBC driver was specified without setting "
+								+ VictimsConfig.Key.DB_URL);
+			}
+		}
+
 		lastUpdate = FileUtils.getFile(VictimsConfig.home(), UPDATE_FILE_NAME);
 		cache = new VictimsResultCache();
 	}
@@ -81,7 +95,7 @@ public class VictimsSqlDB extends VictimsSQL implements VictimsDBInterface {
 	/**
 	 * Remove all records matching the records in the given {@link RecordStream}
 	 * if it exists.
-	 *
+	 * 
 	 * @param recordStream
 	 * @throws SQLException
 	 * @throws IOException
@@ -104,7 +118,7 @@ public class VictimsSqlDB extends VictimsSQL implements VictimsDBInterface {
 	 * Update all records in the given {@link RecordStream}. This will remove
 	 * the record if it already exits and then add it. Otherwise, it just adds
 	 * it.
-	 *
+	 * 
 	 * @param recordStream
 	 * @throws SQLException
 	 * @throws IOException
@@ -154,7 +168,7 @@ public class VictimsSqlDB extends VictimsSQL implements VictimsDBInterface {
 	/**
 	 * Sets the last updated date. Once done, next call to lastUpdated() method
 	 * will return this date.
-	 *
+	 * 
 	 * @param date
 	 *            The date to set.
 	 * @throws IOException
@@ -165,6 +179,7 @@ public class VictimsSqlDB extends VictimsSQL implements VictimsDBInterface {
 		FileUtils.write(lastUpdate, stamp);
 	}
 
+	@Override
 	public Date lastUpdated() throws VictimsException {
 		Throwable throwable = null;
 		try {
@@ -197,6 +212,7 @@ public class VictimsSqlDB extends VictimsSQL implements VictimsDBInterface {
 				throwable);
 	}
 
+	@Override
 	public void synchronize() throws VictimsException {
 		Throwable throwable = null;
 		try {
@@ -239,7 +255,7 @@ public class VictimsSqlDB extends VictimsSQL implements VictimsDBInterface {
 
 	/**
 	 * Returns CVEs that are ascociated with a given record id.
-	 *
+	 * 
 	 * @param recordId
 	 * @return
 	 * @throws SQLException
@@ -262,6 +278,7 @@ public class VictimsSqlDB extends VictimsSQL implements VictimsDBInterface {
 		return cves;
 	}
 
+	@Override
 	public HashSet<String> getVulnerabilities(String sha512)
 			throws VictimsException {
 		try {
@@ -276,6 +293,7 @@ public class VictimsSqlDB extends VictimsSQL implements VictimsDBInterface {
 		}
 	}
 
+	@Override
 	public HashSet<String> getVulnerabilities(HashMap<String, String> props)
 			throws VictimsException {
 		try {
@@ -321,7 +339,7 @@ public class VictimsSqlDB extends VictimsSQL implements VictimsDBInterface {
 	/**
 	 * Fetch record id's from the local database that is composed entirely of
 	 * hashes in the set of hashes provided.
-	 *
+	 * 
 	 * @param hashes
 	 * @return A set record ids
 	 * @throws SQLException
@@ -360,7 +378,7 @@ public class VictimsSqlDB extends VictimsSQL implements VictimsDBInterface {
 	 * Internal method implementing search for vulnerabilities checking if the
 	 * given {@link VictimsRecord}'s contents are a superset of a record in the
 	 * victims database.
-	 *
+	 * 
 	 * @param vr
 	 * @return
 	 * @throws SQLException
@@ -381,6 +399,7 @@ public class VictimsSqlDB extends VictimsSQL implements VictimsDBInterface {
 		return cves;
 	}
 
+	@Override
 	public HashSet<String> getVulnerabilities(VictimsRecord vr)
 			throws VictimsException {
 		try {
@@ -401,6 +420,7 @@ public class VictimsSqlDB extends VictimsSQL implements VictimsDBInterface {
 		}
 	}
 
+	@Override
 	public int getRecordCount() throws VictimsException {
 
 		int count = 0;
@@ -410,18 +430,20 @@ public class VictimsSqlDB extends VictimsSQL implements VictimsDBInterface {
 			connection = getConnection();
 			stmt = connection.createStatement();
 			ResultSet resultSet = stmt.executeQuery(Query.RECORD_COUNT);
-			if (resultSet.next()){
+			if (resultSet.next()) {
 				count = resultSet.getInt(1);
 			}
 			resultSet.close();
 
-		} catch (SQLException e){
+		} catch (SQLException e) {
 			throw new VictimsException("Could not query database size", e);
 		} finally {
 			try {
-				if (stmt != null) stmt.close();
-				if (connection != null) connection.close();
-			} catch (Exception e){
+				if (stmt != null)
+					stmt.close();
+				if (connection != null)
+					connection.close();
+			} catch (Exception e) {
 			}
 		}
 		return count;
@@ -429,9 +451,9 @@ public class VictimsSqlDB extends VictimsSQL implements VictimsDBInterface {
 
 	/**
 	 * This class is used internally to store counts.
-	 *
+	 * 
 	 * @author abn
-	 *
+	 * 
 	 */
 	protected static class MutableInteger {
 		/*

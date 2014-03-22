@@ -28,11 +28,15 @@ import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Set;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 
 import com.redhat.victims.database.VictimsDB;
+import com.redhat.victims.database.VictimsDBInterface;
+import com.redhat.victims.database.VictimsMapDB;
+import com.redhat.victims.database.VictimsSqlDB;
 import com.redhat.victims.fingerprint.Algorithms;
 
 /**
@@ -44,20 +48,30 @@ import com.redhat.victims.fingerprint.Algorithms;
  */
 public class VictimsConfig {
 	protected static String DEFAULT_ALGORITHM_STRING = "SHA512";
+	protected static final HashMap<String, Class<?>> DB_BACKENDS = new HashMap<String, Class<?>>();
 	public static final HashMap<String, String> DEFAULT_PROPS = new HashMap<String, String>();
 
 	static {
+		DB_BACKENDS.put("sqldb", VictimsSqlDB.class);
+		DB_BACKENDS.put("mapdb", VictimsMapDB.class);
+
 		DEFAULT_PROPS.put(Key.URI, "http://www.victi.ms/");
 		DEFAULT_PROPS.put(Key.ENTRY, "service/");
 		DEFAULT_PROPS.put(Key.ENCODING, "UTF-8");
 		DEFAULT_PROPS.put(Key.HOME, FilenameUtils.concat(FileUtils
 				.getUserDirectory().getAbsolutePath(), ".victims"));
 		DEFAULT_PROPS.put(Key.ALGORITHMS, DEFAULT_ALGORITHM_STRING);
+		DEFAULT_PROPS.put(Key.DB_BACKEND, "mapdb");
 		DEFAULT_PROPS.put(Key.DB_DRIVER, VictimsDB.defaultDriver());
 		DEFAULT_PROPS.put(Key.DB_USER, "victims");
 		DEFAULT_PROPS.put(Key.DB_PASS, "victims");
 	}
 
+	/**
+	 * Return the default algorithm used by this implementation.
+	 * 
+	 * @return The default {@link Algorithms} used.
+	 */
 	public static Algorithms getDefaultAlgorithm() {
 		return Algorithms.valueOf(DEFAULT_ALGORITHM_STRING);
 	}
@@ -172,6 +186,47 @@ public class VictimsConfig {
 	}
 
 	/**
+	 * Get the DB backend keys available in the current implementaion
+	 * 
+	 * @return
+	 */
+	public static Set<String> dbBackendKeys() {
+		return DB_BACKENDS.keySet();
+	}
+
+	/**
+	 * Get the current configured DB backed key.
+	 * 
+	 * @return
+	 */
+	public static String dbBackend() {
+		return getPropertyValue(Key.DB_BACKEND);
+	}
+
+	/**
+	 * Get a new instance of the DB backend
+	 * 
+	 * @return
+	 * @throws VictimsException
+	 */
+	public static VictimsDBInterface dbBackendInstance()
+			throws VictimsException {
+		String key = dbBackend();
+
+		if (!dbBackendKeys().contains(key)) {
+			throw new VictimsException(String.format(
+					"Invalid DB backend configuration value '%s'", key));
+		}
+
+		try {
+			return (VictimsDBInterface) DB_BACKENDS.get(key).newInstance();
+		} catch (Exception e) {
+			throw new VictimsException(String.format(
+					"Could not instantiant DB backend. Using '%s'", key), e);
+		}
+	}
+
+	/**
 	 * Get the db driver class string in use.
 	 * 
 	 * @return
@@ -246,6 +301,7 @@ public class VictimsConfig {
 		public static final String HOME = "victims.home";
 		public static final String PURGE_CACHE = "victims.cache.purge";
 		public static final String ALGORITHMS = "victims.algorithms";
+		public static final String DB_BACKEND = "victims.db.backend";
 		public static final String DB_DRIVER = "victims.db.driver";
 		public static final String DB_URL = "victims.db.url";
 		public static final String DB_USER = "victims.db.user";
