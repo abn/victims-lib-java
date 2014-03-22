@@ -45,20 +45,21 @@ public class VictimsMapDB implements VictimsDBInterface {
 	public VictimsMapDB() throws VictimsException {
 		DB_PATH = FilenameUtils.concat(VictimsConfig.home().getAbsolutePath(),
 				DB_PATH);
-		db = DBMaker.newFileDB(new File(DB_PATH)).make();
+
+		db = DBMaker.newFileDB(new File(DB_PATH)).closeOnJvmShutdown().make();
 
 		keyinc = db.getAtomicLong("record_keyinc");
 		updatedTimeStamp = db.getAtomicLong("update_timestamp");
 
-		fingerprintcount = db.createHashMap("fingerprintcount").make();
+		fingerprintcount = db.createHashMap("fingerprintcount").makeOrGet();
 
 		cves = db.createTreeSet("cves").serializer(BTreeKeySerializer.TUPLE2)
-				.make();
+				.makeOrGet();
 
-		checksums = db.createHashMap("checksums").make();
+		checksums = db.createHashMap("checksums").makeOrGet();
 
 		fingerprints = db.createTreeSet("fingerprints")
-				.serializer(BTreeKeySerializer.TUPLE2).make();
+				.serializer(BTreeKeySerializer.TUPLE2).makeOrGet();
 		cache = new VictimsResultCache();
 	}
 
@@ -139,6 +140,7 @@ public class VictimsMapDB implements VictimsDBInterface {
 				cache.purge();
 			}
 			updatedTimeStamp.set((new Date()).getTime());
+			db.commit();
 		} catch (IOException e) {
 			throw new VictimsException("Failed to sych database");
 		}
@@ -189,7 +191,7 @@ public class VictimsMapDB implements VictimsDBInterface {
 
 	@Override
 	public int getRecordCount() throws VictimsException {
-		return (int) keyinc.get();
+		return checksums.size();
 	}
 
 	protected static class MutableLong {
