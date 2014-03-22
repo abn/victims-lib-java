@@ -27,47 +27,38 @@ import com.redhat.victims.fingerprint.Algorithms;
 
 public class VictimsMapDB implements VictimsDBInterface {
 
-	protected static String DB_NAME = "victims.mapdb";
-	protected static String DB_PATH = DB_NAME;
+	protected String DB_NAME = "victims.mapdb";
+	protected String DB_PATH = DB_NAME;
 
-	static {
-		try {
-			DB_PATH = FilenameUtils.concat(VictimsConfig.home()
-					.getAbsolutePath(), DB_PATH);
-		} catch (VictimsException ve) {
-			// skip
-		}
-		// migration code if mapdb does not exist and sqldb does
-	}
+	protected DB db;
 
-	protected static DB db = DBMaker.newFileDB(
-			new File("/home/abn/.victims/victims.mapdb")).make();
+	protected Atomic.Long keyinc;
+	protected Atomic.Long updatedTimeStamp;
 
-	protected static Atomic.Long keyinc = db.getAtomicLong("record_keyinc");
-	protected static Atomic.Long updatedTimeStamp = db
-			.getAtomicLong("update_timestamp");
+	protected HTreeMap<String, Long> checksums;
+	protected NavigableSet<Fun.Tuple2<Long, String>> cves;
+	protected NavigableSet<Fun.Tuple2<String, Long>> fingerprints;
+	protected HTreeMap<Long, Long> fingerprintcount;
 
-	protected static HTreeMap<Long, Long> fingerprintcount = db.createHashMap(
-			"fingerprintcount").make();
-
-	protected static NavigableSet<Fun.Tuple2<Long, String>> cves = db
-			.createTreeSet("cves").serializer(BTreeKeySerializer.TUPLE2).make();
-
-	protected static HTreeMap<String, Long> checksums = db.createHashMap(
-			"checksums").make();
-
-	// db
-	// .createTreeSet("checksums").serializer(BTreeKeySerializer.TUPLE2)
-	// .make();
-
-	protected static NavigableSet<Fun.Tuple2<String, Long>> fingerprints = db
-			.createTreeSet("fingerprints")
-			.serializer(BTreeKeySerializer.TUPLE2).make();
-
-	// victims
-	protected static VictimsResultCache cache;
+	protected VictimsResultCache cache;
 
 	public VictimsMapDB() throws VictimsException {
+		DB_PATH = FilenameUtils.concat(VictimsConfig.home().getAbsolutePath(),
+				DB_PATH);
+		db = DBMaker.newFileDB(new File(DB_PATH)).make();
+
+		keyinc = db.getAtomicLong("record_keyinc");
+		updatedTimeStamp = db.getAtomicLong("update_timestamp");
+
+		fingerprintcount = db.createHashMap("fingerprintcount").make();
+
+		cves = db.createTreeSet("cves").serializer(BTreeKeySerializer.TUPLE2)
+				.make();
+
+		checksums = db.createHashMap("checksums").make();
+
+		fingerprints = db.createTreeSet("fingerprints")
+				.serializer(BTreeKeySerializer.TUPLE2).make();
 		cache = new VictimsResultCache();
 	}
 
