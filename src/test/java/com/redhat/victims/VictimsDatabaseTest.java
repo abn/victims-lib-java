@@ -95,7 +95,7 @@ public class VictimsDatabaseTest {
 		try {
 			System.setProperty(VictimsConfig.Key.DB_DRIVER,
 					"org.apache.derby.jdbc.EmbeddedDriver");
-			VictimsDBInterface vdb = VictimsDB.db();
+			VictimsDBInterface vdb = VictimsDB.sqlDB();
 			vdb.synchronize();
 		} finally {
 			if (old != null) {

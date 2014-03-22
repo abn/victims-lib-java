@@ -77,7 +77,7 @@ public class VictimsDB {
 	 * @return A {@link VictimsDBInterface} implementation.
 	 * @throws VictimsException
 	 */
-	public static VictimsDBInterface db() throws VictimsException {
+	public static VictimsDBInterface sqlDB() throws VictimsException {
 		String driver = VictimsConfig.dbDriver();
 		String dbUrl = VictimsConfig.dbUrl();
 		if (!driver.equals(defaultDriver())) {
@@ -88,7 +88,15 @@ public class VictimsDB {
 								+ VictimsConfig.Key.DB_URL);
 			}
 		}
-		return (VictimsDBInterface) new VictimsSqlDB();
+		return new VictimsSqlDB();
+	}
+
+	public static VictimsDBInterface mapDB() throws VictimsException {
+		return new VictimsMapDB();
+	}
+
+	public static VictimsDBInterface db() throws VictimsException {
+		return mapDB();
 	}
 
 	/**
