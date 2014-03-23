@@ -19,10 +19,6 @@ package com.redhat.victims.database;
  * #L%
  */
 
-import java.util.HashMap;
-
-import org.apache.commons.io.FilenameUtils;
-
 import com.redhat.victims.VictimsConfig;
 import com.redhat.victims.VictimsException;
 
@@ -35,40 +31,6 @@ import com.redhat.victims.VictimsException;
  */
 public class VictimsDB {
     /**
-     * The default driver class to use.
-     * 
-     * @return
-     */
-    public static String defaultDriver() {
-        return Driver.H2;
-    }
-
-    /**
-     * Get the default url for a preconfigured driver.
-     * 
-     * @return
-     */
-    public static String defaultURL(String driver) {
-        assert Driver.exists(driver);
-        String home = "";
-        try {
-            home = VictimsConfig.home().toString();
-        } catch (VictimsException e) {
-            // Ignore and use cwd
-        }
-        return Driver.url(driver, FilenameUtils.concat(home, "victims"));
-    }
-
-    /**
-     * The default url for the default driver.
-     * 
-     * @return
-     */
-    public static String defaultURL() {
-        return defaultURL(defaultDriver());
-    }
-
-    /**
      * Fetches an instance implementing {@link VictimsDBInterface} using the
      * configured driver.
      * 
@@ -78,58 +40,4 @@ public class VictimsDB {
     public static VictimsDBInterface db() throws VictimsException {
         return VictimsConfig.dbBackendInstance();
     }
-
-    /**
-     * This class facilitates use of multiple driver classes
-     * 
-     * @author abn
-     * 
-     */
-    public static class Driver {
-        public static final String H2 = "org.h2.Driver";
-
-        public static final HashMap<String, String> urls = new HashMap<String, String>();
-
-        static {
-            urls.put(H2, "jdbc:h2:%s;MVCC=true");
-        }
-
-        /**
-         * Test if a given driver class is configured.
-         * 
-         * @param driver
-         *            The driver class.
-         * @return
-         */
-        public static boolean exists(String driver) {
-            return urls.containsKey(driver);
-        }
-
-        /**
-         * Get the default connection URL for a given driver.
-         * 
-         * @param driver
-         *            The driver class.
-         * @param path
-         *            The path to the db on disk/network.
-         * @return
-         */
-        public static String url(String driver, String path) {
-            return String.format(urls.get(driver), path);
-        }
-
-        /**
-         * Add a driver to use.
-         * 
-         * @param driver
-         *            The driver class.
-         * @param urlFormat
-         *            The format of the connection url. Eg: jdbc:h2:%s;MVCC=true
-         */
-        public static void addDriver(String driver, String urlFormat) {
-            urls.put(driver, urlFormat);
-        }
-
-    }
-
 }

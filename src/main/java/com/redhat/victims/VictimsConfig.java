@@ -31,7 +31,6 @@ import java.util.Set;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 
-import com.redhat.victims.database.VictimsDB;
 import com.redhat.victims.database.VictimsDBInterface;
 import com.redhat.victims.database.VictimsMapDB;
 import com.redhat.victims.database.VictimsSqlDB;
@@ -60,7 +59,7 @@ public class VictimsConfig {
                 .getUserDirectory().getAbsolutePath(), ".victims"));
         DEFAULT_PROPS.put(Key.ALGORITHMS, DEFAULT_ALGORITHM_STRING);
         DEFAULT_PROPS.put(Key.DB_BACKEND, "mapdb");
-        DEFAULT_PROPS.put(Key.DB_DRIVER, VictimsDB.defaultDriver());
+        DEFAULT_PROPS.put(Key.DB_DRIVER, VictimsSqlDB.defaultDriver());
         DEFAULT_PROPS.put(Key.DB_USER, "victims");
         DEFAULT_PROPS.put(Key.DB_PASS, "victims");
     }
@@ -242,10 +241,10 @@ public class VictimsConfig {
     public static String dbUrl() {
         String dbUrl = getPropertyValue(Key.DB_URL);
         if (dbUrl == null) {
-            if (VictimsDB.Driver.exists(dbDriver())) {
-                return VictimsDB.defaultURL(dbDriver());
+            if (VictimsSqlDB.Driver.exists(dbDriver())) {
+                return VictimsSqlDB.defaultURL(dbDriver());
             }
-            return VictimsDB.defaultURL();
+            return VictimsSqlDB.defaultURL();
         }
         return dbUrl;
     }
