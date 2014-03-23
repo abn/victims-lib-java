@@ -1,16 +1,25 @@
 package com.redhat.victims;
 
+import static org.junit.Assert.assertTrue;
+
 import java.io.IOException;
 
 import org.junit.Test;
 
 import com.redhat.victims.database.VictimsDB;
 import com.redhat.victims.database.VictimsDBInterface;
+import com.redhat.victims.database.VictimsSqlDB;
 
 public class VictimsSqlDatabaseTest extends VictimsDatabaseTest {
 
     static {
         System.setProperty(VictimsConfig.Key.DB_BACKEND, "sqldb");
+    }
+
+    @Test
+    public void testSqlDBInstance() {
+        assertTrue("Unexpected database class",
+                VictimsSqlDB.class.isInstance(vdb));
     }
 
     @Test(expected = VictimsException.class)
