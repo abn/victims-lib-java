@@ -20,7 +20,7 @@ import com.redhat.victims.database.VictimsDBInterface;
 import com.redhat.victims.fingerprint.Algorithms;
 import com.redhat.victims.mock.MockEnvironment;
 
-public class VictimsDatabaseTest {
+public class VictimsDatabaseTest extends VictimsTest {
 
     protected static VictimsDBInterface vdb = null;
 
@@ -47,14 +47,6 @@ public class VictimsDatabaseTest {
         // to share same test cases
         if (vdb == null) {
             sync();
-        }
-    }
-
-    protected static void resetProperty(String key, String old) {
-        if (old != null) {
-            System.setProperty(key, old);
-        } else {
-            System.clearProperty(key);
         }
     }
 

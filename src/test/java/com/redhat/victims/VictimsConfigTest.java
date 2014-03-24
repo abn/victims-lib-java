@@ -8,7 +8,7 @@ import org.junit.Test;
 
 import com.redhat.victims.fingerprint.Algorithms;
 
-public class VictimsConfigTest {
+public class VictimsConfigTest extends VictimsTest {
 
     @Test
     public void testAlgorithms() {
