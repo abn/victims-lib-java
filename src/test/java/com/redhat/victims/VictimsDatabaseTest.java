@@ -26,6 +26,7 @@ public class VictimsDatabaseTest {
 
     @BeforeClass
     public static void setUp() throws IOException, VictimsException {
+        vdb = null;
         File updateResponse = new File(Resources.TEST_RESPONSE);
         MockEnvironment.setUp(updateResponse, null);
     }
