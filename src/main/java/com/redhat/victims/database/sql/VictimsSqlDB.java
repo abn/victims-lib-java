@@ -1,4 +1,4 @@
-package com.redhat.victims.database;
+package com.redhat.victims.database.sql;
 
 /*
  * #%L
@@ -43,6 +43,7 @@ import com.redhat.victims.VictimsRecord;
 import com.redhat.victims.VictimsResultCache;
 import com.redhat.victims.VictimsService;
 import com.redhat.victims.VictimsService.RecordStream;
+import com.redhat.victims.database.VictimsDBInterface;
 import com.redhat.victims.fingerprint.Algorithms;
 
 /**

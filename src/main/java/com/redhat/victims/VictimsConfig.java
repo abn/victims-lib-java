@@ -32,8 +32,8 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 
 import com.redhat.victims.database.VictimsDBInterface;
-import com.redhat.victims.database.VictimsMapDB;
-import com.redhat.victims.database.VictimsSqlDB;
+import com.redhat.victims.database.mapdb.VictimsMapDB;
+import com.redhat.victims.database.sql.VictimsSqlDB;
 import com.redhat.victims.fingerprint.Algorithms;
 
 /**

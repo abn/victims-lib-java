@@ -8,7 +8,7 @@ import org.junit.Test;
 
 import com.redhat.victims.database.VictimsDB;
 import com.redhat.victims.database.VictimsDBInterface;
-import com.redhat.victims.database.VictimsSqlDB;
+import com.redhat.victims.database.sql.VictimsSqlDB;
 
 public class VictimsSqlDatabaseTest extends VictimsDatabaseTest {
 

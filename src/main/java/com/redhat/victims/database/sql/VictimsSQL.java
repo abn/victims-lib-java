@@ -1,4 +1,4 @@
-package com.redhat.victims.database;
+package com.redhat.victims.database.sql;
 
 /*
  * #%L

@@ -8,7 +8,7 @@ import java.util.ArrayList;
 
 import org.junit.Test;
 
-import com.redhat.victims.database.VictimsMapDB;
+import com.redhat.victims.database.mapdb.VictimsMapDB;
 import com.redhat.victims.fingerprint.Algorithms;
 
 public class VictimsConfigTest extends VictimsTest {
