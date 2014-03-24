@@ -210,13 +210,21 @@ public class VictimsConfig {
             throws VictimsException {
         String key = dbBackend();
 
+        Class<?> clz = null;
+
         if (!dbBackendKeys().contains(key)) {
-            throw new VictimsException(String.format(
-                    "Invalid DB backend configuration value '%s'.", key));
+            try {
+                clz = Class.forName(key);
+            } catch (ClassNotFoundException e) {
+                throw new VictimsException(String.format(
+                        "Invalid DB backend configuration value '%s'.", key));
+            }
+        } else {
+            clz = DB_BACKENDS.get(key);
         }
 
         try {
-            return (VictimsDBInterface) DB_BACKENDS.get(key).newInstance();
+            return (VictimsDBInterface) clz.newInstance();
         } catch (Exception e) {
             throw new VictimsException(String.format(
                     "Could not instantiant DB backend. Using '%s'. Reason: %s",
