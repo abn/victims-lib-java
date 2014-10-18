@@ -42,9 +42,9 @@ import com.redhat.victims.fingerprint.Algorithms;
  * @author abn
  * 
  */
-public class VictimsConfig {
-    protected static String DEFAULT_ALGORITHM_STRING = "SHA512";
-    public static final HashMap<String, String> DEFAULT_PROPS = new HashMap<String, String>();
+public final class VictimsConfig {
+    protected static final String DEFAULT_ALGORITHM_STRING = "SHA512";
+    protected static final HashMap<String, String> DEFAULT_PROPS = new HashMap<String, String>();
 
     static {
         DEFAULT_PROPS.put(Key.URI, "http://www.victi.ms/");
@@ -58,26 +58,38 @@ public class VictimsConfig {
         DEFAULT_PROPS.put(Key.DB_PASS, "victims");
     }
 
-    public static Algorithms getDefaultAlgorithm() {
-        return Algorithms.valueOf(DEFAULT_ALGORITHM_STRING);
+    protected VictimsConfig() {
+
+    }
+
+    /**
+     * Return the default value for a property. Note that this ignores any
+     * values configured.
+     *
+     * @param key Configuration property
+     * @return If available, return the default. If a default is not available,
+     *         returns <code>null</code>.
+     */
+    private static String getDefaultPropertyValue(final String key) {
+        if (DEFAULT_PROPS.containsKey(key)) {
+            return DEFAULT_PROPS.get(key);
+        } else {
+            return null;
+        }
     }
 
     /**
      * Return a configured value, or the default.
      * 
-     * @param key
+     * @param key Configuration property
      * @return If configured, return the system property value, else return a
      *         default. If a default is also not available, returns
      *         <code>null</code> if no default is configured.
      */
-    private static String getPropertyValue(String key) {
+    private static String getPropertyValue(final String key) {
         String env = System.getProperty(key);
         if (env == null) {
-            if (DEFAULT_PROPS.containsKey(key)) {
-                return DEFAULT_PROPS.get(key);
-            } else {
-                return null;
-            }
+            return getDefaultPropertyValue(key);
         }
         return env;
     }
@@ -89,6 +101,14 @@ public class VictimsConfig {
     public static Charset charset() {
         String enc = getPropertyValue(Key.ENCODING);
         return Charset.forName(enc);
+    }
+
+    /**
+     *
+     * @return The default algorithm as an Algorithms instance.
+     */
+    public static Algorithms getDefaultAlgorithm() {
+        return Algorithms.valueOf(getDefaultPropertyValue(Key.ALGORITHMS));
     }
 
     /**
