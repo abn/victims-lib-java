@@ -275,20 +275,20 @@ public class VictimsSQL {
      *
      */
     protected static class Query {
-        protected final static String CREATE_TABLE_RECORDS = "CREATE TABLE records ( "
-                + "id BIGINT PRIMARY KEY AUTO_INCREMENT, "
+        protected final static String CREATE_TABLE_RECORDS = "CREATE TABLE IF NOT EXISTS records ( "
+                + "id BIGSERIAL PRIMARY KEY, "
                 + "hash VARCHAR(128)" + ")";
-        protected final static String CREATE_TABLE_FILEHASHES = "CREATE TABLE filehashes ("
+        protected final static String CREATE_TABLE_FILEHASHES = "CREATE TABLE IF NOT EXISTS filehashes ("
                 + "record BIGINT, "
                 + "filehash VARCHAR(128), "
                 + "FOREIGN KEY(record) REFERENCES records(id) "
                 + "ON DELETE CASCADE" + ")";
-        protected final static String CREATE_TABLE_META = "CREATE TABLE meta ("
+        protected final static String CREATE_TABLE_META = "CREATE TABLE IF NOT EXISTS meta ("
                 + "record BIGINT, " + "prop VARCHAR(255), "
                 + "value VARCHAR(255), "
                 + "FOREIGN KEY(record) REFERENCES records(id) "
                 + "ON DELETE CASCADE" + ")";
-        protected final static String CREATE_TABLE_CVES = "CREATE TABLE cves ("
+        protected final static String CREATE_TABLE_CVES = "CREATE TABLE IF NOT EXISTS cves ("
                 + "record BIGINT, " + "cve VARCHAR(32), "
                 + "FOREIGN KEY(record) REFERENCES records(id) "
                 + "ON DELETE CASCADE" + ")";
