@@ -88,7 +88,7 @@ public class VictimsDB {
                                 + VictimsConfig.Key.DB_URL);
             }
         }
-        return (VictimsDBInterface) new VictimsSqlDB();
+        return (VictimsDBInterface) new VictimsHibernate();
     }
 
     /**
