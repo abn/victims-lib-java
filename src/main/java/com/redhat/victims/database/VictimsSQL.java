@@ -230,8 +230,9 @@ public class VictimsSQL {
     protected int insertRecord(Connection connection, String hash)
             throws SQLException {
         int id = -1;
-        PreparedStatement ps = setObjects(connection, Query.INSERT_RECORD, hash);
-        ps.execute();
+        PreparedStatement ps = connection.prepareStatement(Query.INSERT_RECORD, Statement.RETURN_GENERATED_KEYS);
+        setObjects(ps, hash);
+        ps.executeUpdate();
         ResultSet rs = ps.getGeneratedKeys();
         try {
             while (rs.next()) {
