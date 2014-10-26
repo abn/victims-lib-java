@@ -6,6 +6,7 @@ import static org.junit.Assert.assertTrue;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.HashSet;
 
 import org.apache.commons.io.FileUtils;
@@ -67,7 +68,12 @@ public class VictimsDatabaseTest {
                 HashSet<String> result;
 
                 if (meta) {
-                    result = vdb.getVulnerabilities(vr.getFlattenedMetaData());
+                    HashMap<String, String> metadata = vr.getFlattenedMetaData();
+                    result = vdb.getVulnerabilities(metadata);
+                    for (String key : metadata.keySet()) {
+                        metadata.put(key, "THISREALLYSHOULDNOTEXIST");
+                    }
+                    assertEquals("Negative case for property match failed.", 0, vdb.getVulnerabilities(metadata).size());
                 } else {
                     vr.hash = "0";
                     if (embedded) {
