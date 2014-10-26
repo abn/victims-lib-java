@@ -1,18 +1,17 @@
 package com.redhat.victims;
 
-import static org.junit.Assert.assertTrue;
+import com.redhat.victims.database.VictimsDB;
+import com.redhat.victims.database.VictimsDBInterface;
+import com.redhat.victims.mock.MockEnvironment;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.HashSet;
 
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
-
-import com.redhat.victims.database.VictimsDB;
-import com.redhat.victims.database.VictimsDBInterface;
-import com.redhat.victims.mock.MockEnvironment;
+import static org.junit.Assert.assertTrue;
 
 public class VictimsResultCacheTest {
 
@@ -34,10 +33,10 @@ public class VictimsResultCacheTest {
         return cves;
     }
 
-    private VictimsResultCache prepareCache(String hash)
+    private com.redhat.victims.VictimsResultCache prepareCache(String hash)
             throws VictimsException {
         HashSet<String> src = cveSet();
-        VictimsResultCache vrc = new VictimsResultCache();
+        com.redhat.victims.VictimsResultCache vrc = new com.redhat.victims.VictimsResultCache();
         vrc.add(hash, src);
         assertTrue("Result was not cached.", vrc.exists(hash));
         return vrc;
@@ -55,7 +54,7 @@ public class VictimsResultCacheTest {
     @Test
     public void testAdd() throws VictimsException {
         String hash = "0";
-        VictimsResultCache vrc = prepareCache(hash);
+        com.redhat.victims.VictimsResultCache vrc = prepareCache(hash);
         HashSet<String> result = vrc.get(hash);
         assertTrue("Cached CVEs vary from returned CVEs.",
                 equal(cveSet(), result));
@@ -64,7 +63,7 @@ public class VictimsResultCacheTest {
     @Test
     public void testPurge() throws VictimsException {
         String hash = "0";
-        VictimsResultCache vrc = prepareCache(hash);
+        com.redhat.victims.VictimsResultCache vrc = prepareCache(hash);
         vrc.purge();
         assertTrue("Cache was not correctly purged.", !vrc.exists(hash));
     }
@@ -72,15 +71,15 @@ public class VictimsResultCacheTest {
     @Test
     public void testPurgeConfig() throws VictimsException {
         String hash = "0";
-        VictimsResultCache vrc = prepareCache(hash);
+        com.redhat.victims.VictimsResultCache vrc = prepareCache(hash);
 
         System.setProperty(VictimsConfig.Key.PURGE_CACHE, "true");
-        vrc = new VictimsResultCache();
+        vrc = new com.redhat.victims.VictimsResultCache();
         assertTrue("Cache was not correctly purged via config.",
                 !vrc.exists(hash));
         vrc.add(hash, cveSet());
 
-        vrc = new VictimsResultCache();
+        vrc = new com.redhat.victims.VictimsResultCache();
         assertTrue("Purged state was not maintained between instances.",
                 vrc.exists(hash));
 
@@ -91,10 +90,12 @@ public class VictimsResultCacheTest {
     @Test
     public void testPurgeOnSync() throws VictimsException {
         String hash = "0";
-        VictimsResultCache vrc = prepareCache(hash);
+        HashSet<String> test = new HashSet<String>();
+        test.add("CVE-FOO-BAR");
+        com.redhat.victims.database.VictimsResultCache.put(hash, test);
         VictimsDBInterface vdb = VictimsDB.db();
         vdb.synchronize();
         assertTrue("Cache was not correctly purged on database sync.",
-                !vrc.exists(hash));
+                com.redhat.victims.database.VictimsResultCache.get(hash) == null);
     }
 }
