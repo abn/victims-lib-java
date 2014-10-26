@@ -72,9 +72,14 @@ public class VictimsDatabase implements VictimsDBInterface {
 
     protected void removeHashes(HashSet<String> hashes) {
         Session session = VictimsHibernate.openSession();
-        String hql = "DELETE FROM Record r WHERE r.hash in :hashes";
         try {
-            session.createQuery(hql).setParameterList("hashes", hashes).executeUpdate();
+            Criteria deleteCriteria = session.createCriteria(Record.class).add(Restrictions.in("hash", hashes));
+            Transaction txn = session.beginTransaction();
+            int deleteCount = 0;
+            for(Object record : deleteCriteria.list()) {
+                VictimsHibernate.deleteBatch(session, deleteCount++, record);
+            }
+            txn.commit();
         } finally {
             session.close();
         }

@@ -1,11 +1,11 @@
 package com.redhat.victims.database.model;
 
 import java.io.Serializable;
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
 import javax.persistence.Embedded;
 import javax.persistence.Entity;
-import javax.persistence.ForeignKey;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -25,8 +25,8 @@ public class Metadata {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Integer id;
 
-    @ManyToOne
-    @JoinColumn(foreignKey = @ForeignKey(name = "FK_RECORD"))
+    @ManyToOne(cascade = CascadeType.ALL)
+    @JoinColumn
     private Record record;
 
     @Embedded

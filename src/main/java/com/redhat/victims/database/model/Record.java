@@ -8,7 +8,6 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
@@ -34,16 +33,13 @@ public class Record {
     @Column
     private Integer fileCount = 0;
 
-    @OneToMany(cascade = CascadeType.ALL)
-    @JoinColumn(name = "record_id")
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "record")
     private Set<FileHash> filehashes;
 
-    @OneToMany(cascade = CascadeType.ALL)
-    @JoinColumn(name = "record_id")
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "record")
     private Set<CVE> cves;
 
-    @OneToMany(cascade = CascadeType.ALL)
-    @JoinColumn(name = "record_id")
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "record")
     private Set<Metadata> metadata;
 
     public Record() {

@@ -67,4 +67,12 @@ public class VictimsHibernate {
             session.clear();
         }
     }
+
+    public static void deleteBatch(Session session, Integer count, Object object) {
+        session.delete(object);
+        if (count % Integer.parseInt(configuration.getProperty("hibernate.jdbc.batch_size")) == 0) {
+            session.flush();
+            session.clear();
+        }
+    }
 }

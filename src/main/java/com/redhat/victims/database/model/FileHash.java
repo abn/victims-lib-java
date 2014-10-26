@@ -1,8 +1,8 @@
 package com.redhat.victims.database.model;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.ForeignKey;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -22,8 +22,8 @@ public class FileHash {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Integer id;
 
-    @ManyToOne
-    @JoinColumn(foreignKey = @ForeignKey(name = "FK_RECORD"))
+    @ManyToOne(cascade = CascadeType.ALL)
+    @JoinColumn
     private Record record;
 
     @Column(name = "filehash")
