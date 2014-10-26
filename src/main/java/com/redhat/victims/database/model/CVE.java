@@ -26,23 +26,23 @@ public class CVE {
     @JoinColumn
     private Record record;
 
-    @Column(name = "cve")
-    private String cve;
+    @Column(name = "name")
+    private String name;
 
     public CVE() {
     }
 
-    public CVE(Record record, String cve) {
+    public CVE(Record record, String name) {
         this.record = record;
-        this.cve = cve;
+        this.name = name;
     }
 
-    public String getCve() {
-        return cve;
+    public String getName() {
+        return name;
     }
 
-    public void setCve(String cve) {
-        this.cve = cve;
+    public void setName(String name) {
+        this.name = name;
     }
 
     public Record getRecord() {

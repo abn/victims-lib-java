@@ -1,7 +1,7 @@
 package com.redhat.victims.database.model;
 
 import java.util.HashSet;
-import java.util.Set;
+import java.util.List;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -34,13 +34,13 @@ public class Record {
     private Integer fileCount = 0;
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "record")
-    private Set<FileHash> filehashes;
+    private List<FileHash> fileHashes;
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "record")
-    private Set<CVE> cves;
+    private List<CVE> cveList;
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "record")
-    private Set<Metadata> metadata;
+    private List<Metadata> metadata;
 
     public Record() {
 
@@ -75,23 +75,23 @@ public class Record {
         this.fileCount = fileCount;
     }
 
-    public Set<FileHash> getFilehashes() {
-        return filehashes;
+    public List<FileHash> getFileHashes() {
+        return fileHashes;
     }
 
-    public Set<CVE> getCves() {
-        return cves;
+    public List<CVE> getCveList() {
+        return cveList;
     }
 
-    public Set<Metadata> getMetadata() {
+    public List<Metadata> getMetadata() {
         return metadata;
     }
 
     public HashSet<String> getCveNames() {
-        HashSet<String> cves = new HashSet<String>();
-        for (CVE cve : getCves()) {
-            cves.add(cve.getCve());
+        HashSet<String> cveSet = new HashSet<String>();
+        for (CVE cve : getCveList()) {
+            cveSet.add(cve.getName());
         }
-        return cves;
+        return cveSet;
     }
 }

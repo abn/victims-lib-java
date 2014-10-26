@@ -10,6 +10,9 @@ import com.redhat.victims.database.model.Metadata;
 import com.redhat.victims.database.model.Record;
 import com.redhat.victims.database.model.Status;
 import com.redhat.victims.fingerprint.Algorithms;
+import java.io.IOException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -19,18 +22,27 @@ import java.util.Set;
 import org.hibernate.Criteria;
 import org.hibernate.Query;
 import org.hibernate.Session;
+import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
-
-import java.io.IOException;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 
 /**
  * Created by abn on 10/26/14.
  */
 public class VictimsDatabase implements VictimsDBInterface {
+
+    private SessionFactory sessionFactory;
+    private VictimsResultCache cache;
+
+    public VictimsDatabase() {
+        this.sessionFactory = VictimsHibernate.makeSessionFactory();
+        this.cache = new VictimsResultCache(this.sessionFactory);
+    }
+
+    public Session getSession() {
+        return this.sessionFactory.openSession();
+    }
 
     @Override
     public Date lastUpdated() throws VictimsException {
@@ -47,8 +59,8 @@ public class VictimsDatabase implements VictimsDBInterface {
                 return since;
             }
 
-            Session session = VictimsHibernate.openSession();
-            Status lastUpdated = (Status) session.get(Status.class, StatusKey.LAST_UPDATED.toString());
+            Session session = getSession();
+            Status lastUpdated = (Status) session.get(Status.class, Status.StatusKey.LAST_UPDATED.toString());
             if (lastUpdated == null) {
                 since = sdf.parse(lastUpdated.getValue());
             }
@@ -61,22 +73,22 @@ public class VictimsDatabase implements VictimsDBInterface {
     }
 
     private void setLastUpdate(Date date) {
-        Session session = VictimsHibernate.openSession();
+        Session session = getSession();
         try {
             SimpleDateFormat sdf = new SimpleDateFormat(VictimsRecord.DATE_FORMAT);
-            session.save(new Status(StatusKey.LAST_UPDATED.toString(), sdf.format(date)));
+            session.save(new Status(Status.StatusKey.LAST_UPDATED.toString(), sdf.format(date)));
         } finally {
             session.close();
         }
     }
 
     protected void removeHashes(HashSet<String> hashes) {
-        Session session = VictimsHibernate.openSession();
+        Session session = getSession();
         try {
             Criteria deleteCriteria = session.createCriteria(Record.class).add(Restrictions.in("hash", hashes));
             Transaction txn = session.beginTransaction();
             int deleteCount = 0;
-            for(Object record : deleteCriteria.list()) {
+            for (Object record : deleteCriteria.list()) {
                 VictimsHibernate.deleteBatch(session, deleteCount++, record);
             }
             txn.commit();
@@ -96,34 +108,34 @@ public class VictimsDatabase implements VictimsDBInterface {
 
     protected int update(VictimsService.RecordStream recordStream) throws IOException {
         int count = 0;
-        Session session = VictimsHibernate.openSession();
+        Session session = getSession();
         try {
             Record record;
             while (recordStream.hasNext()) {
                 VictimsRecord vr = recordStream.getNext();
                 String hash = vr.hash.trim();
-                Set<String> filehashes = vr.getHashes(Algorithms.SHA512).keySet();
+                Set<String> fileHashes = vr.getHashes(Algorithms.SHA512).keySet();
 
-                record = new Record(hash, filehashes.size());
+                record = new Record(hash, fileHashes.size());
                 session.delete(record);
                 session.save(record);
 
                 Transaction transaction = session.beginTransaction();
-                Integer tcount = 0;
+                Integer tCount = 0;
 
-                // insert filehashes
-                for (String filehash : filehashes) {
-                    VictimsHibernate.saveBatch(session, tcount++, new FileHash(record, filehash));
+                // insert file hashes
+                for (String filehash : fileHashes) {
+                    VictimsHibernate.saveBatch(session, tCount++, new FileHash(record, filehash));
                 }
                 // insert metadata key-value pairs
                 HashMap<String, String> md = vr.getFlattenedMetaData();
                 for (String key : md.keySet()) {
-                    VictimsHibernate.saveBatch(session, tcount++, new Metadata(record, key.trim(), md.get(key).trim()));
+                    VictimsHibernate.saveBatch(session, tCount++, new Metadata(record, key.trim(), md.get(key).trim()));
                 }
 
                 // insert cves
                 for (String cve : vr.cves) {
-                    VictimsHibernate.saveBatch(session, tcount++, new CVE(record, cve.trim()));
+                    VictimsHibernate.saveBatch(session, tCount++, new CVE(record, cve.trim()));
                 }
 
                 transaction.commit();
@@ -148,7 +160,7 @@ public class VictimsDatabase implements VictimsDBInterface {
             int updated = update(service.updates(since));
 
             if (removed > 0 || updated > 0) {
-                VictimsResultCache.purge();
+                cache.purge();
             }
 
             setLastUpdate(new Date());
@@ -177,7 +189,7 @@ public class VictimsDatabase implements VictimsDBInterface {
             return cves;
         }
 
-        Session session = VictimsHibernate.openSession();
+        Session session = getSession();
         try {
             Criteria matchCriteria = session.createCriteria(FileHash.class)
                     .add(Restrictions.in("filehash", fileHashes))
@@ -189,8 +201,8 @@ public class VictimsDatabase implements VictimsDBInterface {
                 Record record = (Record) tuple[0];
                 Long count = (Long) tuple[1];
                 if (count.equals(new Long(record.getFileCount()))) {
-                    for (CVE c : record.getCves()) {
-                        cves.add(c.getCve());
+                    for (CVE c : record.getCveList()) {
+                        cves.add(c.getName());
                     }
                 }
             }
@@ -204,7 +216,7 @@ public class VictimsDatabase implements VictimsDBInterface {
             throws VictimsException {
         try {
 
-            HashSet<String> cached = VictimsResultCache.get(vr.hash);
+            HashSet<String> cached = cache.get(vr.hash);
             if (cached != null) {
                 return cached;
             }
@@ -217,7 +229,7 @@ public class VictimsDatabase implements VictimsDBInterface {
             // Match any embedded filehashes
             cves.addAll(getEmbeddedVulnerabilities(vr));
 
-            VictimsResultCache.put(vr.hash, cves);
+            cache.put(vr.hash, cves);
             return cves;
         } catch (Throwable e) {
             throw new VictimsException(
@@ -227,8 +239,9 @@ public class VictimsDatabase implements VictimsDBInterface {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public HashSet<String> getVulnerabilities(String sha512) throws VictimsException {
-        Session session = VictimsHibernate.openSession();
+        Session session = getSession();
         try {
             HashSet<String> cves = new HashSet<String>();
             for (Record record : (List<Record>) session.createCriteria(Record.class)
@@ -243,7 +256,7 @@ public class VictimsDatabase implements VictimsDBInterface {
 
     @Override
     public HashSet<String> getVulnerabilities(HashMap<String, String> props) throws VictimsException {
-        Session session = VictimsHibernate.openSession();
+        Session session = getSession();
         try {
             HashSet<String> cves = new HashSet<String>();
 
@@ -261,8 +274,8 @@ public class VictimsDatabase implements VictimsDBInterface {
                 Record record = (Record) tuple[0];
                 Long count = (Long) tuple[1];
                 if (count.equals(new Long(props.size()))) {
-                    for (CVE c : record.getCves()) {
-                        cves.add(c.getCve());
+                    for (CVE c : record.getCveList()) {
+                        cves.add(c.getName());
                     }
                 }
             }
@@ -274,12 +287,11 @@ public class VictimsDatabase implements VictimsDBInterface {
 
     @Override
     public int getRecordCount() throws VictimsException {
-        Session session = VictimsHibernate.openSession();
+        Session session = getSession();
         try {
             return (Integer) session.createCriteria(Record.class).setProjection(Projections.rowCount()).list().get(0);
         } finally {
             session.close();
         }
     }
-
 }

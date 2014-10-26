@@ -46,4 +46,11 @@ public class Status {
     public void setValue(String value) {
         this.value = value;
     }
+
+    /**
+     * Created by abn on 10/25/14.
+     */
+    public static enum StatusKey {
+        LAST_UPDATED
+    }
 }

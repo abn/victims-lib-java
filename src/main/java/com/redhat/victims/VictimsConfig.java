@@ -21,6 +21,7 @@ package com.redhat.victims;
  * #L%
  */
 
+import com.redhat.victims.fingerprint.Algorithms;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -28,12 +29,8 @@ import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashMap;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
-
-import com.redhat.victims.database.VictimsDB;
-import com.redhat.victims.fingerprint.Algorithms;
 
 /**
  * This class provides system property keys and default values for all available
@@ -43,9 +40,12 @@ import com.redhat.victims.fingerprint.Algorithms;
  * 
  */
 public class VictimsConfig {
-    protected static String DEFAULT_ALGORITHM_STRING = "SHA512";
-    public static final HashMap<String, String> DEFAULT_PROPS = new HashMap<String, String>();
+    private static String DEFAULT_ALGORITHM_STRING = "SHA512";
+    private static String DEFAULT_DATABASE_URL_FMT = "jdbc:h2:%s;MVCC=true";
+    private static String DEFAULT_DATABASE_DRIVER = "org.h2.Driver";
+    private static String DEFAULT_DATABASE_DIALECT = "org.hibernate.dialect.H2Dialect";
 
+    public static final HashMap<String, String> DEFAULT_PROPS = new HashMap<String, String>();
     static {
         DEFAULT_PROPS.put(Key.URI, "http://www.victi.ms/");
         DEFAULT_PROPS.put(Key.ENTRY, "service/");
@@ -53,7 +53,8 @@ public class VictimsConfig {
         DEFAULT_PROPS.put(Key.HOME, FilenameUtils.concat(FileUtils
                 .getUserDirectory().getAbsolutePath(), ".victims"));
         DEFAULT_PROPS.put(Key.ALGORITHMS, DEFAULT_ALGORITHM_STRING);
-        DEFAULT_PROPS.put(Key.DB_DRIVER, VictimsDB.defaultDriver());
+        DEFAULT_PROPS.put(Key.DB_DRIVER, DEFAULT_DATABASE_DRIVER);
+        DEFAULT_PROPS.put(Key.DB_DIALECT, DEFAULT_DATABASE_DIALECT);
         DEFAULT_PROPS.put(Key.DB_USER, "victims");
         DEFAULT_PROPS.put(Key.DB_PASS, "victims");
     }
@@ -129,7 +130,7 @@ public class VictimsConfig {
     /**
      * Get the configured cache directory. If the directory does not exist, it
      * will be created.
-     * 
+     *
      * @return
      * @throws VictimsException
      */
@@ -144,6 +145,15 @@ public class VictimsConfig {
             }
         }
         return directory;
+    }
+
+    /**
+     * Get the configured home directory property value.
+     *
+     * @return
+     */
+    public static String getHomeProperty() {
+        return getPropertyValue(Key.HOME);
     }
 
     /**
@@ -181,6 +191,15 @@ public class VictimsConfig {
     }
 
     /**
+     * Get the hibernate dialect.
+     *
+     * @return
+     */
+    public static String dbDialect() {
+        return getPropertyValue(Key.DB_DIALECT);
+    }
+
+    /**
      * Get the db connection URL.
      * 
      * @return
@@ -188,10 +207,7 @@ public class VictimsConfig {
     public static String dbUrl() {
         String dbUrl = getPropertyValue(Key.DB_URL);
         if (dbUrl == null) {
-            if (VictimsDB.Driver.exists(dbDriver())) {
-                return VictimsDB.defaultURL(dbDriver());
-            }
-            return VictimsDB.defaultURL();
+            return String.format(DEFAULT_DATABASE_URL_FMT, FilenameUtils.concat(getHomeProperty(), "victims"));
         }
         return dbUrl;
     }
@@ -233,6 +249,22 @@ public class VictimsConfig {
     }
 
     /**
+     * Is debug enabled?
+     *
+     * @return
+     */
+    public static boolean isDebug() { return Boolean.getBoolean(Key.DEBUG); }
+
+    /**
+     * Is database debug enabled?
+     *
+     * @return
+     */
+    public static boolean isDatabaseDebug() {
+        return Boolean.getBoolean(Key.DB_DEBUG);
+    }
+
+    /**
      * This class contains system property keys that are used to configure
      * victims.
      * 
@@ -247,10 +279,13 @@ public class VictimsConfig {
         public static final String PURGE_CACHE = "victims.cache.purge";
         public static final String ALGORITHMS = "victims.algorithms";
         public static final String DB_DRIVER = "victims.db.driver";
+        public static final String DB_DIALECT = "victims.db.dialect";
+        public static final String DB_PURGE = "victims.db.purge";
         public static final String DB_URL = "victims.db.url";
         public static final String DB_USER = "victims.db.user";
         public static final String DB_PASS = "victims.db.pass";
-        public static final String DB_PURGE = "victims.db.purge";
+        public static final String DB_DEBUG = "victims.db.debug";
+        public static final String DEBUG = "victims.debug";
     }
 
 }

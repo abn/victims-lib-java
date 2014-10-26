@@ -1,13 +1,11 @@
 package com.redhat.victims.database.model;
 
-import java.util.List;
-import javax.persistence.CollectionTable;
-import javax.persistence.ElementCollection;
+import java.util.HashSet;
+import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
+import org.apache.commons.lang.StringUtils;
 
 /**
  * Created by abn on 10/26/14.
@@ -17,19 +15,17 @@ import javax.persistence.Table;
 public class Cache {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
     private String hash;
 
-    @ElementCollection
-    @CollectionTable
-    private List<String> cveList;
+    @Column
+    private String vulnerabilities;
 
     public Cache() {
     }
 
-    public Cache(String hash, List<String> cveList) {
+    public Cache(String hash, HashSet<String> cveSet) {
         this.hash = hash;
-        this.cveList = cveList;
+        this.vulnerabilities = StringUtils.join(cveSet, ",");
     }
 
     public String getHash() {
@@ -40,11 +36,19 @@ public class Cache {
         this.hash = hash;
     }
 
-    public List<String> getCveList() {
-        return cveList;
+    public String getVulnerabilities() {
+        return vulnerabilities;
     }
 
-    public void setCveList(List<String> cveList) {
-        this.cveList = cveList;
+    public void setVulnerabilities(String vulnerabilities) {
+        this.vulnerabilities = vulnerabilities;
+    }
+
+    public HashSet<String> getCveSet() {
+        HashSet<String> cveSet = new HashSet<String>();
+        for (String cve : StringUtils.split(getVulnerabilities(), ",")) {
+            cveSet.add(cve);
+        }
+        return cveSet;
     }
 }

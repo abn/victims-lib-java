@@ -1,24 +1,23 @@
 package com.redhat.victims;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.HashSet;
-
-import org.apache.commons.io.FileUtils;
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Test;
-
 import com.redhat.victims.VictimsService.RecordStream;
 import com.redhat.victims.database.VictimsDB;
 import com.redhat.victims.database.VictimsDBInterface;
 import com.redhat.victims.fingerprint.Algorithms;
 import com.redhat.victims.mock.MockEnvironment;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.HashSet;
+import org.apache.commons.io.FileUtils;
+import org.hibernate.boot.registry.classloading.spi.ClassLoadingException;
+import org.junit.AfterClass;
+import org.junit.BeforeClass;
+import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class VictimsDatabaseTest {
 
@@ -118,7 +117,7 @@ public class VictimsDatabaseTest {
         vdb.synchronize();
     }
 
-    @Test(expected = VictimsException.class)
+    @Test(expected = ClassLoadingException.class)
     public void testDerby() throws IOException, VictimsException {
         String old = System.getProperty(VictimsConfig.Key.DB_DRIVER);
         try {
