@@ -1,6 +1,14 @@
 package com.redhat.victims.database.model;
 
-import javax.persistence.*;
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.ForeignKey;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.Table;
 
 /**
  * Created by abn on 10/25/14.
@@ -21,7 +29,8 @@ public class CVE {
     @Column(name = "cve")
     private String cve;
 
-    public CVE() { }
+    public CVE() {
+    }
 
     public CVE(Record record, String cve) {
         this.record = record;

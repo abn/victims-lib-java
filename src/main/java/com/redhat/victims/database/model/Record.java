@@ -1,5 +1,7 @@
 package com.redhat.victims.database.model;
 
+import java.util.HashSet;
+import java.util.Set;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -11,7 +13,6 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 import javax.validation.constraints.NotNull;
-import java.util.Set;
 
 /**
  * Created by abn on 10/25/14.
@@ -33,16 +34,16 @@ public class Record {
     @Column
     private Integer fileCount = 0;
 
-    @OneToMany(cascade=CascadeType.ALL)
-    @JoinColumn(name="record_id")
+    @OneToMany(cascade = CascadeType.ALL)
+    @JoinColumn(name = "record_id")
     private Set<FileHash> filehashes;
 
-    @OneToMany(cascade=CascadeType.ALL)
-    @JoinColumn(name="record_id")
+    @OneToMany(cascade = CascadeType.ALL)
+    @JoinColumn(name = "record_id")
     private Set<CVE> cves;
 
-    @OneToMany(cascade=CascadeType.ALL)
-    @JoinColumn(name="record_id")
+    @OneToMany(cascade = CascadeType.ALL)
+    @JoinColumn(name = "record_id")
     private Set<Metadata> metadata;
 
     public Record() {
@@ -88,5 +89,13 @@ public class Record {
 
     public Set<Metadata> getMetadata() {
         return metadata;
+    }
+
+    public HashSet<String> getCveNames() {
+        HashSet<String> cves = new HashSet<String>();
+        for (CVE cve : getCves()) {
+            cves.add(cve.getCve());
+        }
+        return cves;
     }
 }

@@ -31,14 +31,14 @@ import com.redhat.victims.VictimsException;
 /**
  * A class providing easy instantiation of DB implementation based on the
  * configured driver.
- * 
+ *
  * @author abn
- * 
+ *
  */
 public class VictimsDB {
     /**
      * The default driver class to use.
-     * 
+     *
      * @return
      */
     public static String defaultDriver() {
@@ -47,7 +47,7 @@ public class VictimsDB {
 
     /**
      * Get the default url for a preconfigured driver.
-     * 
+     *
      * @return
      */
     public static String defaultURL(String driver) {
@@ -63,7 +63,7 @@ public class VictimsDB {
 
     /**
      * The default url for the default driver.
-     * 
+     *
      * @return
      */
     public static String defaultURL() {
@@ -73,7 +73,7 @@ public class VictimsDB {
     /**
      * Fetches an instance implementing {@link VictimsDBInterface} using the
      * configured driver.
-     * 
+     *
      * @return A {@link VictimsDBInterface} implementation.
      * @throws VictimsException
      */
@@ -88,14 +88,14 @@ public class VictimsDB {
                                 + VictimsConfig.Key.DB_URL);
             }
         }
-        return (VictimsDBInterface) new VictimsHibernate();
+        return (VictimsDBInterface) new VictimsDatabase();
     }
 
     /**
      * This class facilitates use of multiple driver classes
-     * 
+     *
      * @author abn
-     * 
+     *
      */
     public static class Driver {
         public static final String H2 = "org.h2.Driver";
@@ -108,7 +108,7 @@ public class VictimsDB {
 
         /**
          * Test if a given driver class is configured.
-         * 
+         *
          * @param driver
          *            The driver class.
          * @return
@@ -119,7 +119,7 @@ public class VictimsDB {
 
         /**
          * Get the default connection URL for a given driver.
-         * 
+         *
          * @param driver
          *            The driver class.
          * @param path
@@ -132,7 +132,7 @@ public class VictimsDB {
 
         /**
          * Add a driver to use.
-         * 
+         *
          * @param driver
          *            The driver class.
          * @param urlFormat
